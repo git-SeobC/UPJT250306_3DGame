@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
+using TMPro;
 using Unity.Hierarchy;
 using Unity.VisualScripting;
 using UnityEngine; // NameSpace : 소속
@@ -31,7 +32,7 @@ public class PlayerManager : MonoBehaviour
     private float pitch = 0.0f; // 위 아래 회전 값
     private float yaw = 0.0f; // 좌우 회전 값
     private bool isFirstPerson = false; // 1인칭 모드 여부
-    private bool isRotaterAroundPlayer = true; // 카메라가 플레이어 주위를 회전하는지 여부
+    private bool isRotaterAroundPlayer = false; // 카메라가 플레이어 주위를 회전하는지 여부
 
     // 중력 관련 변수
     public float gravity = -9.81f;
@@ -50,6 +51,7 @@ public class PlayerManager : MonoBehaviour
     // 총기 조준 및 발사 애니메이션 상태
     private bool isAim = false;
     private bool isFire = false;
+    private bool isFireMoving = false;
 
     // 총기 사운드
     public AudioClip audioClipFire;
@@ -100,9 +102,6 @@ public class PlayerManager : MonoBehaviour
             Debug.Log(isRotaterAroundPlayer ? "카메라가 주위를 회전합니다." : "플레이어가 시야에 따라서 회전합니다.");
         }
 
-        // 플레이어 움직임
-        if (isFirstPerson) { FirstPoersonMovement(); }
-        else { ThirdPersonMovement(); }
 
         // 카메라 줌 기능
         if (Input.GetMouseButtonDown(1)) // 우측 버튼 누를 때
@@ -147,17 +146,32 @@ public class PlayerManager : MonoBehaviour
             }
         }
 
+        // 플레이어 움직임
+        if (isFirstPerson) { FirstPoersonMovement(); }
+        else { ThirdPersonMovement(); }
+
         // 총기 발사
         if (isAim && Input.GetMouseButtonDown(0))
         {
-            isFire = true;
-            animator.SetBool("IsFire", isFire);
+            if (!isFireMoving)
+            {
+                isFire = true;
+                animator.SetBool("IsFire", isFire);
+            }
+            else
+            {
+                isFire = true;
+                animator.SetBool("IsFire", isFire);
+                animator.SetBool("IsFireMoving", isFireMoving);
+            }
             audioSource.PlayOneShot(audioClipFire);
         }
         if (Input.GetMouseButtonUp(0))
         {
             isFire = false;
+            isFireMoving = false;
             animator.SetBool("IsFire", isFire);
+            animator.SetBool("IsFireMoving", isFireMoving);
         }
 
         if (Input.GetKey(KeyCode.LeftShift)) { isRunning = true; }
@@ -184,13 +198,33 @@ public class PlayerManager : MonoBehaviour
 
     void FirstPoersonMovement()
     {
-        if (!isAim)
+        horizontal = Input.GetAxis("Horizontal");
+        vertical = Input.GetAxis("Vertical");
+
+        if (isAim && vertical.Equals(1.0f)) // 조준 전진 상태일 때 조준 전진 애니메이션 실행
         {
-            horizontal = Input.GetAxis("Horizontal");
-            vertical = Input.GetAxis("Vertical");
+            isFireMoving = true;
+            animator.SetBool("IsFireMoving", isFireMoving);
+            Vector3 moveDirection = cameraTransform.forward * vertical;
+            moveDirection.y = 0;
+            characterController.Move(moveDirection * moveSpeed * Time.deltaTime);
+        }
+        else if (!isAim)
+        {
+            isFire = false;
+            animator.SetBool("IsFire", isFire);
+            isFireMoving = false;
+            animator.SetBool("IsFireMoving", isFireMoving);
             Vector3 moveDirection = cameraTransform.forward * vertical + cameraTransform.right * horizontal;
             moveDirection.y = 0; // <<< 플레이 할때 확인해 볼 부분
             characterController.Move(moveDirection * moveSpeed * Time.deltaTime); // 플레이어 움직임 적용
+        }
+        else
+        {
+            isFire = false;
+            animator.SetBool("IsFire", isFire);
+            isFireMoving = false;
+            animator.SetBool("IsFireMoving", isFireMoving);
         }
 
         cameraTransform.position = playerHead.position; // 1인칭이기 때문에 플레이어 시점으로 카메라 포지션 세팅
@@ -201,12 +235,31 @@ public class PlayerManager : MonoBehaviour
 
     void ThirdPersonMovement()
     {
-        if (!isAim)
+        horizontal = Input.GetAxis("Horizontal");
+        vertical = Input.GetAxis("Vertical");
+
+        if (isAim && vertical.Equals(1.0f)) // 조준 전진 상태일 때 조준 전진 애니메이션 실행
         {
-            horizontal = Input.GetAxis("Horizontal");
-            vertical = Input.GetAxis("Vertical");
+            isFireMoving = true;
+            animator.SetBool("IsFireMoving", isFireMoving);
+            Vector3 move = transform.forward * vertical;
+            characterController.Move(move * moveSpeed * Time.deltaTime);
+        }
+        else if (!isAim)
+        {
+            isFire = false;
+            animator.SetBool("IsFire", isFire);
+            isFireMoving = false;
+            animator.SetBool("IsFireMoving", isFireMoving);
             Vector3 move = transform.right * horizontal + transform.forward * vertical;
             characterController.Move(move * moveSpeed * Time.deltaTime);
+        }
+        else
+        {
+            isFire = false;
+            animator.SetBool("IsFire", isFire);
+            isFireMoving = false;
+            animator.SetBool("IsFireMoving", isFireMoving);
         }
 
         UpdateCameraPosition();
@@ -220,21 +273,21 @@ public class PlayerManager : MonoBehaviour
             Vector3 direction = new Vector3(0, 0, -currentDistance);
             Quaternion rotation = Quaternion.Euler(pitch, yaw, 0);
 
-            // 카메라를 플레이어의 오른쪽에서 고정된 위치로 이동
             cameraTransform.position = transform.position + thirdPersonOffset + rotation * direction;
 
-            // 카메라가 플레이어의 위치를 따라가도록 설정
             cameraTransform.LookAt(transform.position + new Vector3(0, thirdPersonOffset.y, 0));
+
         }
         else
         {
             // 플레이어가 직접 회전하는 모드
             transform.rotation = Quaternion.Euler(0f, yaw, 0);
             Vector3 direction = new Vector3(0, 0, -currentDistance);
+
+            // 카메라를 플레이어의 오른쪽에서 고정된 위치로 이동
             cameraTransform.position = playerLookObj.position + thirdPersonOffset + Quaternion.Euler(pitch, yaw, 0) * direction;
             cameraTransform.LookAt(playerLookObj.position + new Vector3(0, thirdPersonOffset.y, 0)); // 플레이어가 보고 있는 곳으로 LookAt
         }
-
     }
 
     public void SetTargetDistance(float distance)
