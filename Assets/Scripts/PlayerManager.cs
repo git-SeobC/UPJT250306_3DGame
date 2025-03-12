@@ -51,7 +51,6 @@ public class PlayerManager : MonoBehaviour
     // 총기 조준 및 발사 애니메이션 상태
     private bool isAim = false;
     private bool isFire = false;
-    private bool isFireMoving = false;
 
     // 총기 사운드
     public AudioClip audioClipFire;
@@ -64,6 +63,10 @@ public class PlayerManager : MonoBehaviour
 
     private int animationSpeed = 1;
     private string currentAnimation = "";
+
+    public Transform aimTarget;
+
+    private float weaponMaxDistance = 100.0f;
 
     void Start()
     {
@@ -122,6 +125,7 @@ public class PlayerManager : MonoBehaviour
         // 카메라 줌 기능
         if (Input.GetMouseButtonDown(1)) // 우측 버튼 누를 때
         {
+
             // 견착 상태
             isAim = true;
             //animator.SetBool("IsAim", isAim);
@@ -178,6 +182,24 @@ public class PlayerManager : MonoBehaviour
         else { isRunning = false; }
     }
 
+    public void PickItemCheck()
+    {
+        if (Input.GetKeyDown(KeyCode.E))
+        {
+            AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
+            if (!(stateInfo.IsName("PickItemFloor")) && stateInfo.normalizedTime >= 1.0f)
+            {
+                animator.SetTrigger("Pick");
+            }
+        }
+    }
+
+    public void UpdateAimTarget()
+    {
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        aimTarget.position = ray.GetPoint(10.0f);
+    }
+
 
     void Update()
     {
@@ -190,27 +212,40 @@ public class PlayerManager : MonoBehaviour
         // 총기 발사
         if (isAim && Input.GetMouseButtonDown(0))
         {
+            // Weapon Type에 따라 MaxDistance 를 Set
+            weaponMaxDistance = 1000.0f;
+
             isFire = true;
             animator.SetTrigger("Fire");
-            //animator.SetBool("IsFire", isFire);
-            //animator.SetBool("IsFire", isFire);
             audioSource.PlayOneShot(audioClipFire);
+
+            Ray ray = new Ray(mainCamera.transform.position, mainCamera.transform.forward);
+            RaycastHit hit;
+
+            if (Physics.Raycast(ray, out hit, weaponMaxDistance))
+            {
+                Debug.Log($"Hit : {hit.collider.gameObject.name}");
+                Debug.DrawLine(ray.origin, hit.point, Color.red, 2.0f);
+                hit.collider.gameObject.SetActive(false);
+            }
+            else
+            {
+                Debug.DrawLine(ray.origin, ray.origin + ray.direction * weaponMaxDistance, Color.green, 2.0f);
+            }
         }
+
         if (Input.GetMouseButtonUp(0))
         {
             isFire = false;
-            //animator.SetBool("IsFire", isFire);
         }
 
         if (Input.GetKeyDown(KeyCode.Alpha1))
         {
-            //audioSource.PlayOneShot(audioClipWeaponChange);
             animator.SetTrigger("IsWeaponChange");
             shotgun2.SetActive(true);
         }
         if (Input.GetKeyDown(KeyCode.Alpha4))
         {
-            //audioSource.PlayOneShot(audioClipWeaponChange);
             animator.SetTrigger("IsWeaponChange");
             shotgun2.SetActive(false);
         }
@@ -223,14 +258,16 @@ public class PlayerManager : MonoBehaviour
         // 애니메이션 속도 조절
         animator.speed = animationSpeed;
 
-        // 0번 애니메이션 레이어의 정보
-        AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
-        // 0번 레이어의 재생중인 애니메이션이 Hit이고 애니메이션이 재생중이면
-        if (stateInfo.IsName(currentAnimation) && stateInfo.normalizedTime >= 1.0f)
-        {
-            currentAnimation = "Attack";
-            animator.Play(currentAnimation);
-        }
+        //// 0번 애니메이션 레이어의 정보
+        //AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
+        //// 0번 레이어의 재생중인 애니메이션이 Hit이고 애니메이션이 재생중이면
+        //if (stateInfo.IsName(currentAnimation) && stateInfo.normalizedTime >= 1.0f)
+        //{
+        //    currentAnimation = "Attack";
+        //    animator.Play(currentAnimation);
+        //}
+
+        PickItemCheck();
     }
 
     void FirstPoersonMovement()
@@ -276,6 +313,8 @@ public class PlayerManager : MonoBehaviour
             // 카메라를 플레이어의 오른쪽에서 고정된 위치로 이동
             cameraTransform.position = playerLookObj.position + thirdPersonOffset + Quaternion.Euler(pitch, yaw, 0) * direction;
             cameraTransform.LookAt(playerLookObj.position + new Vector3(0, thirdPersonOffset.y, 0)); // 플레이어가 보고 있는 곳으로 LookAt
+
+            UpdateAimTarget();
         }
     }
 
