@@ -73,7 +73,10 @@ public class PlayerManager : MonoBehaviour
         shotgun2.SetActive(false);
     }
 
-    void Update()
+    /// <summary>
+    /// 마우스 세팅
+    /// </summary>
+    public void MouseSet()
     {
         // 마우스 입력을 받아 카메라와 플레이어 회전 처리
         float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
@@ -89,7 +92,13 @@ public class PlayerManager : MonoBehaviour
         {
             velocity.y = -2f;
         }
+    }
 
+    /// <summary>
+    /// 1 ↔ 3 인칭 전환
+    /// </summary>
+    public void CameraToggle()
+    {
         if (Input.GetKeyDown(KeyCode.V)) // 1 ↔ 3 인칭 전환
         {
             isFirstPerson = !isFirstPerson;
@@ -101,14 +110,19 @@ public class PlayerManager : MonoBehaviour
             isRotaterAroundPlayer = !isRotaterAroundPlayer;
             Debug.Log(isRotaterAroundPlayer ? "카메라가 주위를 회전합니다." : "플레이어가 시야에 따라서 회전합니다.");
         }
+    }
 
-
+    void Aimset()
+    {
         // 카메라 줌 기능
         if (Input.GetMouseButtonDown(1)) // 우측 버튼 누를 때
         {
             // 견착 상태
             isAim = true;
-            animator.SetBool("IsAim", isAim);
+            //animator.SetBool("IsAim", isAim);
+
+            animator.SetLayerWeight(1, 1);
+
 
             // 코루틴이 이미 실행중이면 실행중인 코루틴 정지
             if (zoomCoroutine != null) { StopCoroutine(zoomCoroutine); }
@@ -128,9 +142,11 @@ public class PlayerManager : MonoBehaviour
         if (Input.GetMouseButtonUp(1)) // 우측 버튼 뗄 때
         {
             isAim = false;
-            animator.SetBool("IsAim", isAim);
+            //animator.SetBool("IsAim", isAim);
+            animator.SetLayerWeight(1, 0);
             isFire = false;
             animator.SetBool("IsFire", isFire);
+
 
             if (zoomCoroutine != null) { StopCoroutine(zoomCoroutine); }
 
@@ -145,47 +161,51 @@ public class PlayerManager : MonoBehaviour
                 zoomCoroutine = StartCoroutine(ZoomCamera(targetDistance));
             }
         }
+    }
 
+    public void PersonMovement()
+    {
         // 플레이어 움직임
         if (isFirstPerson) { FirstPoersonMovement(); }
         else { ThirdPersonMovement(); }
 
+        if (Input.GetKey(KeyCode.LeftShift)) { isRunning = true; }
+        else { isRunning = false; }
+    }
+
+
+    void Update()
+    {
+        MouseSet();
+        CameraToggle();
+        Aimset();
+        PersonMovement();
+
+
         // 총기 발사
         if (isAim && Input.GetMouseButtonDown(0))
         {
-            if (!isFireMoving)
-            {
-                isFire = true;
-                animator.SetBool("IsFire", isFire);
-            }
-            else
-            {
-                isFire = true;
-                animator.SetBool("IsFire", isFire);
-                animator.SetBool("IsFireMoving", isFireMoving);
-            }
+            isFire = true;
+            animator.SetTrigger("Fire");
+            //animator.SetBool("IsFire", isFire);
+            //animator.SetBool("IsFire", isFire);
             audioSource.PlayOneShot(audioClipFire);
         }
         if (Input.GetMouseButtonUp(0))
         {
             isFire = false;
-            isFireMoving = false;
-            animator.SetBool("IsFire", isFire);
-            animator.SetBool("IsFireMoving", isFireMoving);
+            //animator.SetBool("IsFire", isFire);
         }
-
-        if (Input.GetKey(KeyCode.LeftShift)) { isRunning = true; }
-        else { isRunning = false; }
 
         if (Input.GetKeyDown(KeyCode.Alpha1))
         {
-            audioSource.PlayOneShot(audioClipWeaponChange);
+            //audioSource.PlayOneShot(audioClipWeaponChange);
             animator.SetTrigger("IsWeaponChange");
             shotgun2.SetActive(true);
         }
         if (Input.GetKeyDown(KeyCode.Alpha4))
         {
-            audioSource.PlayOneShot(audioClipWeaponChange);
+            //audioSource.PlayOneShot(audioClipWeaponChange);
             animator.SetTrigger("IsWeaponChange");
             shotgun2.SetActive(false);
         }
@@ -201,7 +221,7 @@ public class PlayerManager : MonoBehaviour
         horizontal = Input.GetAxis("Horizontal");
         vertical = Input.GetAxis("Vertical");
 
-        if (isAim && vertical.Equals(1.0f)) // 조준 전진 상태일 때 조준 전진 애니메이션 실행
+        if (isAim) // 조준 전진 상태일 때 조준 전진 애니메이션 실행
         {
             isFireMoving = true;
             animator.SetBool("IsFireMoving", isFireMoving);
@@ -238,29 +258,29 @@ public class PlayerManager : MonoBehaviour
         horizontal = Input.GetAxis("Horizontal");
         vertical = Input.GetAxis("Vertical");
 
-        if (isAim && vertical.Equals(1.0f)) // 조준 전진 상태일 때 조준 전진 애니메이션 실행
-        {
-            isFireMoving = true;
-            animator.SetBool("IsFireMoving", isFireMoving);
-            Vector3 move = transform.forward * vertical;
-            characterController.Move(move * moveSpeed * Time.deltaTime);
-        }
-        else if (!isAim)
-        {
-            isFire = false;
-            animator.SetBool("IsFire", isFire);
-            isFireMoving = false;
-            animator.SetBool("IsFireMoving", isFireMoving);
-            Vector3 move = transform.right * horizontal + transform.forward * vertical;
-            characterController.Move(move * moveSpeed * Time.deltaTime);
-        }
-        else
-        {
-            isFire = false;
-            animator.SetBool("IsFire", isFire);
-            isFireMoving = false;
-            animator.SetBool("IsFireMoving", isFireMoving);
-        }
+        //if (isAim)
+        //{
+        //isFireMoving = true;
+        //animator.SetBool("IsFireMoving", isFireMoving);
+        Vector3 moveDirection = cameraTransform.forward * vertical + cameraTransform.right * horizontal;
+        characterController.Move(moveDirection * moveSpeed * Time.deltaTime);
+        //}
+        //else if (!isAim)
+        //{
+        //    isFire = false;
+        //    animator.SetBool("IsFire", isFire);
+        //    isFireMoving = false;
+        //    animator.SetBool("IsFireMoving", isFireMoving);
+        //    Vector3 move = transform.right * horizontal + transform.forward * vertical;
+        //    characterController.Move(move * moveSpeed * Time.deltaTime);
+        //}
+        //else
+        //{
+        //    isFire = false;
+        //    animator.SetBool("IsFire", isFire);
+        //    isFireMoving = false;
+        //    animator.SetBool("IsFireMoving", isFireMoving);
+        //}
 
         UpdateCameraPosition();
     }
@@ -276,7 +296,6 @@ public class PlayerManager : MonoBehaviour
             cameraTransform.position = transform.position + thirdPersonOffset + rotation * direction;
 
             cameraTransform.LookAt(transform.position + new Vector3(0, thirdPersonOffset.y, 0));
-
         }
         else
         {
@@ -322,5 +341,16 @@ public class PlayerManager : MonoBehaviour
         }
 
         mainCamera.fieldOfView = targetFov;
+    }
+
+    public void WeaponChangeSoundEvent()
+    {
+        audioSource.PlayOneShot(audioClipWeaponChange);
+        Debug.Log("총 체인지 사운드");
+    }
+
+    public void WeaponShootSoundEvent()
+    {
+
     }
 }
