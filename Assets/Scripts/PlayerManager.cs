@@ -236,6 +236,10 @@ public class PlayerManager : MonoBehaviour
             {
                 Debug.Log($"Hit : {hit.collider.gameObject.name}");
                 Debug.DrawLine(ray.origin, hit.point, Color.red, 2.0f);
+                if (hit.collider.gameObject.layer == LayerMask.NameToLayer("Enemy"))
+                {
+                    hit.collider.gameObject.GetComponent<ZombieManager>().TakeDamage(20);
+                }
                 //hit.collider.gameObject.SetActive(false);
             }
             else
