@@ -220,67 +220,20 @@ public class PlayerManager : MonoBehaviour
     {
         horizontal = Input.GetAxis("Horizontal");
         vertical = Input.GetAxis("Vertical");
-
-        if (isAim) // 조준 전진 상태일 때 조준 전진 애니메이션 실행
-        {
-            isFireMoving = true;
-            animator.SetBool("IsFireMoving", isFireMoving);
-            Vector3 moveDirection = cameraTransform.forward * vertical;
-            moveDirection.y = 0;
-            characterController.Move(moveDirection * moveSpeed * Time.deltaTime);
-        }
-        else if (!isAim)
-        {
-            isFire = false;
-            animator.SetBool("IsFire", isFire);
-            isFireMoving = false;
-            animator.SetBool("IsFireMoving", isFireMoving);
-            Vector3 moveDirection = cameraTransform.forward * vertical + cameraTransform.right * horizontal;
-            moveDirection.y = 0; // <<< 플레이 할때 확인해 볼 부분
-            characterController.Move(moveDirection * moveSpeed * Time.deltaTime); // 플레이어 움직임 적용
-        }
-        else
-        {
-            isFire = false;
-            animator.SetBool("IsFire", isFire);
-            isFireMoving = false;
-            animator.SetBool("IsFireMoving", isFireMoving);
-        }
-
-        cameraTransform.position = playerHead.position; // 1인칭이기 때문에 플레이어 시점으로 카메라 포지션 세팅
-        cameraTransform.rotation = Quaternion.Euler(pitch, yaw, 0); // 회전 각에 따라 카메라 회전 값 조정
-
-        transform.rotation = Quaternion.Euler(0f, cameraTransform.eulerAngles.y, 0); // 카메라 시점에 따른 플레이어 몸통 회전
+        Vector3 moveDirection = cameraTransform.forward * vertical + cameraTransform.right * horizontal;
+        moveDirection.y = 0;
+        characterController.Move(moveDirection * moveSpeed * Time.deltaTime);
+        cameraTransform.position = playerHead.position;
+        cameraTransform.rotation = Quaternion.Euler(pitch, yaw, 0);
+        transform.rotation = Quaternion.Euler(0f, cameraTransform.eulerAngles.y, 0);
     }
 
     void ThirdPersonMovement()
     {
         horizontal = Input.GetAxis("Horizontal");
         vertical = Input.GetAxis("Vertical");
-
-        //if (isAim)
-        //{
-        //isFireMoving = true;
-        //animator.SetBool("IsFireMoving", isFireMoving);
-        Vector3 moveDirection = cameraTransform.forward * vertical + cameraTransform.right * horizontal;
-        characterController.Move(moveDirection * moveSpeed * Time.deltaTime);
-        //}
-        //else if (!isAim)
-        //{
-        //    isFire = false;
-        //    animator.SetBool("IsFire", isFire);
-        //    isFireMoving = false;
-        //    animator.SetBool("IsFireMoving", isFireMoving);
-        //    Vector3 move = transform.right * horizontal + transform.forward * vertical;
-        //    characterController.Move(move * moveSpeed * Time.deltaTime);
-        //}
-        //else
-        //{
-        //    isFire = false;
-        //    animator.SetBool("IsFire", isFire);
-        //    isFireMoving = false;
-        //    animator.SetBool("IsFireMoving", isFireMoving);
-        //}
+        Vector3 move = transform.right * horizontal + transform.forward * vertical;
+        characterController.Move(move * moveSpeed * Time.deltaTime);
 
         UpdateCameraPosition();
     }
