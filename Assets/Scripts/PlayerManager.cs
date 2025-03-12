@@ -58,7 +58,12 @@ public class PlayerManager : MonoBehaviour
     private AudioSource audioSource;
     public AudioClip audioClipWeaponChange;
 
+    public AudioClip audioClipHitPlayer;
+
     public GameObject shotgun2;
+
+    private int animationSpeed = 1;
+    private string currentAnimation = "";
 
     void Start()
     {
@@ -112,7 +117,7 @@ public class PlayerManager : MonoBehaviour
         }
     }
 
-    void Aimset()
+    void AimSet()
     {
         // 카메라 줌 기능
         if (Input.GetMouseButtonDown(1)) // 우측 버튼 누를 때
@@ -178,7 +183,7 @@ public class PlayerManager : MonoBehaviour
     {
         MouseSet();
         CameraToggle();
-        Aimset();
+        AimSet();
         PersonMovement();
 
 
@@ -214,6 +219,18 @@ public class PlayerManager : MonoBehaviour
         animator.SetFloat("Vertical", vertical);
         animator.SetBool("IsRunning", isRunning);
         moveSpeed = isRunning ? runSpeed : walkSpeed;
+
+        // 애니메이션 속도 조절
+        animator.speed = animationSpeed;
+
+        // 0번 애니메이션 레이어의 정보
+        AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
+        // 0번 레이어의 재생중인 애니메이션이 Hit이고 애니메이션이 재생중이면
+        if (stateInfo.IsName(currentAnimation) && stateInfo.normalizedTime >= 1.0f)
+        {
+            currentAnimation = "Attack";
+            animator.Play(currentAnimation);
+        }
     }
 
     void FirstPoersonMovement()
@@ -302,8 +319,33 @@ public class PlayerManager : MonoBehaviour
         Debug.Log("총 체인지 사운드");
     }
 
-    public void WeaponShootSoundEvent()
+    public void WeaponFireSoundEvent()
     {
+        audioSource.PlayOneShot(audioClipFire);
+    }
 
+    public void PlayerPositionReset()
+    {
+        characterController.enabled = false;
+        transform.position = Vector3.zero;
+        characterController.enabled = true;
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.gameObject.CompareTag("Enemy"))
+        {
+            Debug.Log("Player Trigger Collision");
+
+            audioSource.PlayOneShot(audioClipHitPlayer);
+            Debug.Log("앙 마자띠");
+
+            animator.SetTrigger("Hit");
+
+            Debug.Log($"1 : {other.gameObject.transform.position}");
+            Debug.Log($"{other.gameObject.name}");
+            PlayerPositionReset();
+            Debug.Log($"2 : {other.gameObject.transform.position}");
+        }
     }
 }
