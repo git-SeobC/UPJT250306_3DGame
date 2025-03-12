@@ -79,6 +79,7 @@ public class PlayerManager : MonoBehaviour
         animator = GetComponent<Animator>();
         audioSource = GetComponent<AudioSource>();
         shotgun2.SetActive(false);
+        animator.speed = animationSpeed;
     }
 
     /// <summary>
@@ -174,6 +175,11 @@ public class PlayerManager : MonoBehaviour
 
     public void PersonMovement()
     {
+        animator.SetFloat("Horizontal", horizontal);
+        animator.SetFloat("Vertical", vertical);
+        animator.SetBool("IsRunning", isRunning);
+        moveSpeed = isRunning ? runSpeed : walkSpeed;
+
         // 플레이어 움직임
         if (isFirstPerson) { FirstPoersonMovement(); }
         else { ThirdPersonMovement(); }
@@ -187,11 +193,22 @@ public class PlayerManager : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.E))
         {
             AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
-            if (!(stateInfo.IsName("PickItemFloor")) && stateInfo.normalizedTime >= 1.0f)
+            //if (!(stateInfo.IsName("PickItemFloor")) && stateInfo.normalizedTime >= 1.0f)
             {
                 animator.SetTrigger("Pick");
             }
         }
+
+        // 애니메이션 속도 조절
+
+        //// 0번 애니메이션 레이어의 정보
+        //AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
+        //// 0번 레이어의 재생중인 애니메이션이 Hit이고 애니메이션이 재생중이면
+        //if (stateInfo.IsName(currentAnimation) && stateInfo.normalizedTime >= 1.0f)
+        //{
+        //    currentAnimation = "Attack";
+        //    animator.Play(currentAnimation);
+        //}
     }
 
     public void UpdateAimTarget()
@@ -200,15 +217,8 @@ public class PlayerManager : MonoBehaviour
         aimTarget.position = ray.GetPoint(10.0f);
     }
 
-
-    void Update()
+    public void GunFire()
     {
-        MouseSet();
-        CameraToggle();
-        AimSet();
-        PersonMovement();
-
-
         // 총기 발사
         if (isAim && Input.GetMouseButtonDown(0))
         {
@@ -226,7 +236,7 @@ public class PlayerManager : MonoBehaviour
             {
                 Debug.Log($"Hit : {hit.collider.gameObject.name}");
                 Debug.DrawLine(ray.origin, hit.point, Color.red, 2.0f);
-                hit.collider.gameObject.SetActive(false);
+                //hit.collider.gameObject.SetActive(false);
             }
             else
             {
@@ -238,7 +248,10 @@ public class PlayerManager : MonoBehaviour
         {
             isFire = false;
         }
+    }
 
+    public void ChangeWeapon()
+    {
         if (Input.GetKeyDown(KeyCode.Alpha1))
         {
             animator.SetTrigger("IsWeaponChange");
@@ -249,25 +262,19 @@ public class PlayerManager : MonoBehaviour
             animator.SetTrigger("IsWeaponChange");
             shotgun2.SetActive(false);
         }
+    }
 
-        animator.SetFloat("Horizontal", horizontal);
-        animator.SetFloat("Vertical", vertical);
-        animator.SetBool("IsRunning", isRunning);
-        moveSpeed = isRunning ? runSpeed : walkSpeed;
+    void Update()
+    {
 
-        // 애니메이션 속도 조절
-        animator.speed = animationSpeed;
-
-        //// 0번 애니메이션 레이어의 정보
-        //AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
-        //// 0번 레이어의 재생중인 애니메이션이 Hit이고 애니메이션이 재생중이면
-        //if (stateInfo.IsName(currentAnimation) && stateInfo.normalizedTime >= 1.0f)
-        //{
-        //    currentAnimation = "Attack";
-        //    animator.Play(currentAnimation);
-        //}
-
+        MouseSet();
+        CameraToggle();
+        AimSet();
+        PersonMovement();
+        GunFire();
+        ChangeWeapon();
         PickItemCheck();
+
     }
 
     void FirstPoersonMovement()
