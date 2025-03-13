@@ -263,39 +263,40 @@ public class PlayerManager : MonoBehaviour
             audioSource.PlayOneShot(audioClipFire);
 
             Ray ray = new Ray(mainCamera.transform.position, mainCamera.transform.forward);
-            RaycastHit[] hits = Physics.RaycastAll(ray, weaponMaxDistance, targetLayerMask);
+            RaycastHit hit;
 
-            if (hits.Length > 0)
-            {
-                int count = 0;
-                Debug.Log($"hits.lengh : {hits.Length}");
-                foreach (var hit in hits)
-                {
-                    if (count > 1) break;
-                    Debug.Log($"충돌 : {hit.collider.name}");
-                    Debug.DrawLine(ray.origin, hit.point, Color.red, 3.0f);
-                    count++;
-                }
-            }
-            else
-            {
-                Debug.DrawLine(ray.origin, ray.origin + ray.direction * weaponMaxDistance, Color.green, 3.0f);
-            }
-
-            //if (Physics.Raycast(ray, out hit, weaponMaxDistance))
+            //RaycastHit[] hits = Physics.RaycastAll(ray, weaponMaxDistance, targetLayerMask);
+            //if (hits.Length > 0)
             //{
-            //    Debug.Log($"Hit : {hit.collider.gameObject.name}");
-            //    Debug.DrawLine(ray.origin, hit.point, Color.red, 2.0f);
-            //    if (hit.collider.gameObject.layer == LayerMask.NameToLayer("Enemy"))
+            //    int count = 0;
+            //    Debug.Log($"hits.lengh : {hits.Length}");
+            //    foreach (var hit in hits)
             //    {
-            //        hit.collider.gameObject.GetComponent<ZombieManager>().TakeDamage(20);
+            //        if (count > 1) break;
+            //        Debug.Log($"충돌 : {hit.collider.name}");
+            //        Debug.DrawLine(ray.origin, hit.point, Color.red, 3.0f);
+            //        count++;
             //    }
-            //    //hit.collider.gameObject.SetActive(false);
             //}
             //else
             //{
-            //    Debug.DrawLine(ray.origin, ray.origin + ray.direction * weaponMaxDistance, Color.green, 2.0f);
+            //    Debug.DrawLine(ray.origin, ray.origin + ray.direction * weaponMaxDistance, Color.green, 3.0f);
             //}
+
+            if (Physics.Raycast(ray, out hit, weaponMaxDistance))
+            {
+                Debug.Log($"Hit : {hit.collider.gameObject.name}");
+                Debug.DrawLine(ray.origin, hit.point, Color.red, 2.0f);
+                if (hit.collider.gameObject.layer == LayerMask.NameToLayer("Enemy"))
+                {
+                    hit.collider.gameObject.GetComponent<ZombieManager>().TakeDamage(20);
+                }
+                //hit.collider.gameObject.SetActive(false);
+            }
+            else
+            {
+                Debug.DrawLine(ray.origin, ray.origin + ray.direction * weaponMaxDistance, Color.green, 2.0f);
+            }
         }
 
         if (Input.GetMouseButtonUp(0))
