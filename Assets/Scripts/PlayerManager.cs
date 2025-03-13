@@ -62,6 +62,7 @@ public class PlayerManager : MonoBehaviour
     public AudioClip audioClipWeaponChange;
     public AudioClip audioClipHitPlayer;
     public AudioClip audioClipPikcup;
+    public AudioClip audioClipDefaultStep;
 
     public Transform aimTarget;
 
@@ -73,6 +74,7 @@ public class PlayerManager : MonoBehaviour
     public LayerMask targetLayerMask;
     public MultiAimConstraint multiAimConstraint;
     private float weaponMaxDistance = 100.0f;
+    public LayerMask groundLayerMask;
 
     // Item pick 관련 변수
     public Vector3 boxSize = new Vector3(1f, 1f, 1f);
@@ -465,17 +467,24 @@ public class PlayerManager : MonoBehaviour
 
     public void FootStepSoundOn()
     {
-        //if (Physics.Raycast(transform.position, transform.forward, out hit, 10.0f, itemLayer))
-        //{
-        //    if (hit.ColliderHit.tag == "Wood")
-        //    {
-        //        audioSource.PlayOneShot(audioClipFire); //발소리재생
-        //    }
-        //    else if (hit.ColliderHit.tag == "Wood")
-        //    {
-        //        audioSource.PlayOneShot(audioClipFire); //발소리재생
-        //    }
-        //}
+        RaycastHit hit;
+        if (Physics.Raycast(transform.position, transform.forward, out hit, 10.0f, groundLayerMask))
+        {
+            Debug.Log("FootSound");
+            if (hit.collider.gameObject.tag == "Wood")
+            {
+                audioSource.PlayOneShot(audioClipDefaultStep);
+            }
+            else if (hit.collider.gameObject.tag == "Rock")
+            {
+                audioSource.PlayOneShot(audioClipDefaultStep);
+            }
+            else
+            {
+                Debug.Log("FootSound");
+                audioSource.PlayOneShot(audioClipDefaultStep);
+            }
+        }
     }
 
     private void OnTriggerEnter(Collider other)
