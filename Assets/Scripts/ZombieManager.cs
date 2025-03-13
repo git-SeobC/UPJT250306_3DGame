@@ -71,7 +71,7 @@ public class ZombieManager : MonoBehaviour
         {
             if (patrolPoints.Length > 0)
             {
-                Debug.Log("zomie Patrol");
+                //Debug.Log("zomie Patrol");
                 Transform targetPoint = patrolPoints[currentPoint];
                 Vector3 direction = (targetPoint.position - transform.position).normalized;
                 transform.position += direction * moveSpeed * Time.deltaTime;

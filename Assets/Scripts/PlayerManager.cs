@@ -137,7 +137,7 @@ public class PlayerManager : MonoBehaviour
         {
             velocity.y = -2f;
         }
-    } 
+    }
 
     /// <summary>
     /// 1 ↔ 3 인칭 전환
@@ -465,24 +465,25 @@ public class PlayerManager : MonoBehaviour
         characterController.enabled = true;
     }
 
-    public void FootStepSoundOn()
+    public void FootStepSoundOn(AnimationEvent pEvent)
     {
         RaycastHit hit;
-        if (Physics.Raycast(transform.position, transform.forward, out hit, 10.0f, groundLayerMask))
+        if (Physics.Raycast(transform.position, transform.forward + new Vector3(0, -1, 0), out hit, 10.0f, groundLayerMask))
         {
-            Debug.Log("FootSound");
             if (hit.collider.gameObject.tag == "Wood")
             {
-                audioSource.PlayOneShot(audioClipDefaultStep);
+                if (pEvent.animatorClipInfo.weight > 0.4f) audioSource.PlayOneShot(audioClipDefaultStep);
+                //if (!audioSource.isPlaying) audioSource.PlayOneShot(audioClipDefaultStep);
             }
             else if (hit.collider.gameObject.tag == "Rock")
             {
-                audioSource.PlayOneShot(audioClipDefaultStep);
+                if (pEvent.animatorClipInfo.weight > 0.4f) audioSource.PlayOneShot(audioClipDefaultStep);
+                //if (!audioSource.isPlaying) audioSource.PlayOneShot(audioClipDefaultStep);
             }
             else
             {
-                Debug.Log("FootSound");
-                audioSource.PlayOneShot(audioClipDefaultStep);
+                if (pEvent.animatorClipInfo.weight > 0.4f) audioSource.PlayOneShot(audioClipDefaultStep);
+                //if (!audioSource.isPlaying) audioSource.PlayOneShot(audioClipDefaultStep);
             }
         }
     }
