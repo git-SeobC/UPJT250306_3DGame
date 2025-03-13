@@ -1,6 +1,17 @@
 using Unity.VisualScripting;
 using UnityEngine;
 
+public enum EZombieState
+{
+    Patrol,
+    Chase,
+    Attack,
+    Evade,
+    Damage,
+    Idle,
+    Die
+}
+
 public class ZombieManager : MonoBehaviour
 {
     public int hp = 100;
@@ -9,23 +20,24 @@ public class ZombieManager : MonoBehaviour
 
     public EZombieState currentState = EZombieState.Idle;
     public Transform target;
-    public float attackRange = 1.0f;            // 공격 범위
-    public float attackDelay = 2.0f;            // 공격 딜레이
-    private float nextAttackTime = 0.0f;        // 다음 공격 시간 관리
-    public Transform[] patrolPoints;            // 순찰 경로 지점들
-    private int currentPoint = 0;             // 현재 순찰 경로 지점 인덱스
-    public float moveSpeed = 2.0f;              // 이동속도
-    private float trackingRange = 7.0f;         // 추적 범위 설정
-    private bool isAttack = false;              // 공격 상태
-    private float evadeRange = 5.0f;            // 도망 상태 회피 거리
-    private float distanceToTarget;             // Target과의 거리 계산 값
-    private bool isWaiting = false;             // 상태 전환 후 대기 상태 여부
-    public float idleTime = 2.0f;               // 각 상태 전환 후 대기 시간
+    public float attackRange = 1.0f;         // 공격 범위
+    public float attackDelay = 2.0f;         // 공격 딜레이
+    private float nextAttackTime = 0.0f;     // 다음 공격 시간 관리
+    public Transform[] patrolPoints;         // 순찰 경로 지점들
+    private int currentPoint = 0;            // 현재 순찰 경로 지점 인덱스
+    public float moveSpeed = 2.0f;           // 이동속도
+    private float trackingRange = 7.0f;      // 추적 범위 설정
+    private float evadeRange = 5.0f;         // 도망 상태 회피 거리
+    private float distanceToTarget;          // Target과의 거리 계산 값
+    public float idleTime = 2.0f;            // 각 상태 전환 후 대기 시간
     private float zombieHp = 10.0f;
-    private bool isDie = false;
+
+    // 상태 조건
+    private bool isAttack = false;           // 공격 상태
+    private bool isWaiting = false;          // 상태 전환 후 대기 상태 여부
+    private bool isDie = false;              // 죽은 상태
 
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         animator = GetComponent<Animator>();
@@ -40,7 +52,6 @@ public class ZombieManager : MonoBehaviour
         }
     }
 
-    // Update is called once per frame
     void Update()
     {
         distanceToTarget = Vector3.Distance(transform.position, target.position);
@@ -72,8 +83,6 @@ public class ZombieManager : MonoBehaviour
                 }
             }
         }
-
-
     }
 
     public void TakeDamage(int pDamaged)
@@ -93,13 +102,3 @@ public class ZombieManager : MonoBehaviour
     }
 }
 
-public enum EZombieState
-{
-    Patrol, //
-    Chase,
-    Attack,
-    Evade,
-    Damage,
-    Idle,
-    Die
-}
