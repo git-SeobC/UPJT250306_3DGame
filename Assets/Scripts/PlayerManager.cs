@@ -44,6 +44,8 @@ public class PlayerManager : MonoBehaviour
 
     // 애니메이션 및 이동 관련 변수
     private Animator animator;
+    private int animationSpeed = 1;
+    private string currentAnimation = "";
     private float horizontal;
     private float vertical;
     private bool isRunning = false;
@@ -54,25 +56,23 @@ public class PlayerManager : MonoBehaviour
     private bool isAim = false;
     private bool isFire = false;
 
-    // 총기 사운드
-    public AudioClip audioClipFire;
+    // 사운드 클립
     private AudioSource audioSource;
+    public AudioClip audioClipFire;
     public AudioClip audioClipWeaponChange;
-
     public AudioClip audioClipHitPlayer;
     public AudioClip audioClipPikcup;
 
-    public GameObject shotgun2;
-
-    private int animationSpeed = 1;
-    private string currentAnimation = "";
-
     public Transform aimTarget;
 
-    private float weaponMaxDistance = 100.0f;
-
+    // UI 관련
     public GameObject crosshairObj; // 크로스헤어 오브젝트
     public GameObject gunIconObj; // 총 아이콘 오브젝트, 총기 아이템 근처에서 On
+
+    // Raycast 관련
+    public LayerMask targetLayerMask;
+    public MultiAimConstraint multiAimConstraint;
+    private float weaponMaxDistance = 100.0f;
 
     // Item pick 관련 변수
     public Vector3 boxSize = new Vector3(1f, 1f, 1f);
@@ -80,11 +80,12 @@ public class PlayerManager : MonoBehaviour
     public LayerMask itemLayer;
     public Transform itemGetPos;
 
-    public LayerMask targetLayerMask;
-    public MultiAimConstraint multiAimConstraint;
-
-    bool isGetGunItem = false;
-    bool isUseWeapon = false;
+    // 총기 관련 조건 및 변수
+    private bool isGetGunItem = false;
+    private bool isUseWeapon = false;
+    private float rifleFireDelay = 0.5f;
+    public GameObject shotgun2; // 플레이어 손 총기 오브젝트
+    public ParticleSystem gunFireEffect;
 
 
     void Start()
@@ -134,7 +135,7 @@ public class PlayerManager : MonoBehaviour
         {
             velocity.y = -2f;
         }
-    }
+    } 
 
     /// <summary>
     /// 1 ↔ 3 인칭 전환
@@ -162,7 +163,7 @@ public class PlayerManager : MonoBehaviour
             crosshairObj.SetActive(true); // 크로스헤어 On
             // 견착 상태
             isAim = true;
-            multiAimConstraint.data.offset = new Vector3(-30, 0, 0);
+            multiAimConstraint.data.offset = new Vector3(-45, 0, 5);
             //animator.SetBool("IsAim", isAim);
             animator.SetLayerWeight(1, 1);
 
@@ -255,56 +256,67 @@ public class PlayerManager : MonoBehaviour
     public void GunFire()
     {
         // 총기 발사
-        if (isAim && Input.GetMouseButtonDown(0))
+        if (Input.GetMouseButtonDown(0))
         {
-            // Weapon Type에 따라 MaxDistance 를 Set
-            weaponMaxDistance = 1000.0f;
-
-            isFire = true;
-            animator.SetTrigger("Fire");
-            audioSource.PlayOneShot(audioClipFire);
-
-            Ray ray = new Ray(mainCamera.transform.position, mainCamera.transform.forward);
-            RaycastHit hit;
-
-            //RaycastHit[] hits = Physics.RaycastAll(ray, weaponMaxDistance, targetLayerMask);
-            //if (hits.Length > 0)
-            //{
-            //    int count = 0;
-            //    Debug.Log($"hits.lengh : {hits.Length}");
-            //    foreach (var hit in hits)
-            //    {
-            //        if (count > 1) break;
-            //        Debug.Log($"충돌 : {hit.collider.name}");
-            //        Debug.DrawLine(ray.origin, hit.point, Color.red, 3.0f);
-            //        count++;
-            //    }
-            //}
-            //else
-            //{
-            //    Debug.DrawLine(ray.origin, ray.origin + ray.direction * weaponMaxDistance, Color.green, 3.0f);
-            //}
-
-            if (Physics.Raycast(ray, out hit, weaponMaxDistance))
+            if (isAim && !isFire)
             {
-                Debug.Log($"Hit : {hit.collider.gameObject.name}");
-                Debug.DrawLine(ray.origin, hit.point, Color.red, 2.0f);
-                if (hit.collider.gameObject.layer == LayerMask.NameToLayer("Enemy"))
+                // Weapon Type에 따라 MaxDistance 를 Set
+                weaponMaxDistance = 1000.0f;
+
+                isFire = true;
+
+                StartCoroutine(FireTimer());
+                animator.SetTrigger("Fire");
+                //audioSource.PlayOneShot(audioClipFire);
+
+
+                Ray ray = new Ray(mainCamera.transform.position, mainCamera.transform.forward);
+                RaycastHit hit;
+
+                //RaycastHit[] hits = Physics.RaycastAll(ray, weaponMaxDistance, targetLayerMask);
+                //if (hits.Length > 0)
+                //{
+                //    int count = 0;
+                //    Debug.Log($"hits.lengh : {hits.Length}");
+                //    foreach (var hit in hits)
+                //    {
+                //        if (count > 1) break;
+                //        Debug.Log($"충돌 : {hit.collider.name}");
+                //        Debug.DrawLine(ray.origin, hit.point, Color.red, 3.0f);
+                //        count++;
+                //    }
+                //}
+                //else
+                //{
+                //    Debug.DrawLine(ray.origin, ray.origin + ray.direction * weaponMaxDistance, Color.green, 3.0f);
+                //}
+
+                if (Physics.Raycast(ray, out hit, weaponMaxDistance))
                 {
-                    hit.collider.gameObject.GetComponent<ZombieManager>().TakeDamage(20);
+                    Debug.Log($"Hit : {hit.collider.gameObject.name}");
+                    Debug.DrawLine(ray.origin, hit.point, Color.red, 2.0f);
+                    if (hit.collider.gameObject.layer == LayerMask.NameToLayer("Enemy"))
+                    {
+                        hit.collider.gameObject.GetComponent<ZombieManager>().TakeDamage(20);
+                    }
+                    //hit.collider.gameObject.SetActive(false);
                 }
-                //hit.collider.gameObject.SetActive(false);
-            }
-            else
-            {
-                Debug.DrawLine(ray.origin, ray.origin + ray.direction * weaponMaxDistance, Color.green, 2.0f);
+                else
+                {
+                    Debug.DrawLine(ray.origin, ray.origin + ray.direction * weaponMaxDistance, Color.green, 2.0f);
+                }
             }
         }
+        //if (Input.GetMouseButtonUp(0))
+        //{
+        //    isFire = false;
+        //}
+    }
 
-        if (Input.GetMouseButtonUp(0))
-        {
-            isFire = false;
-        }
+    IEnumerator FireTimer()
+    {
+        yield return new WaitForSeconds(rifleFireDelay);
+        isFire = false;
     }
 
     public void ChangeWeapon()
@@ -441,6 +453,7 @@ public class PlayerManager : MonoBehaviour
     public void WeaponFireSoundEvent()
     {
         audioSource.PlayOneShot(audioClipFire);
+        gunFireEffect.Play();
     }
 
     public void PlayerPositionReset()
@@ -448,6 +461,21 @@ public class PlayerManager : MonoBehaviour
         characterController.enabled = false;
         transform.position = Vector3.zero;
         characterController.enabled = true;
+    }
+
+    public void FootStepSoundOn()
+    {
+        //if (Physics.Raycast(transform.position, transform.forward, out hit, 10.0f, itemLayer))
+        //{
+        //    if (hit.ColliderHit.tag == "Wood")
+        //    {
+        //        audioSource.PlayOneShot(audioClipFire); //발소리재생
+        //    }
+        //    else if (hit.ColliderHit.tag == "Wood")
+        //    {
+        //        audioSource.PlayOneShot(audioClipFire); //발소리재생
+        //    }
+        //}
     }
 
     private void OnTriggerEnter(Collider other)
