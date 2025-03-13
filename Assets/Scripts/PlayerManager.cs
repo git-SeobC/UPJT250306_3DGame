@@ -83,6 +83,8 @@ public class PlayerManager : MonoBehaviour
     public LayerMask targetLayerMask;
     public MultiAimConstraint multiAimConstraint;
 
+    bool isGetGunItem = false;
+    bool isUseWeapon = false;
 
 
     void Start()
@@ -155,7 +157,7 @@ public class PlayerManager : MonoBehaviour
     void AimSet()
     {
         // 카메라 줌 기능
-        if (Input.GetMouseButtonDown(1)) // 우측 버튼 누를 때
+        if (Input.GetMouseButtonDown(1) && isGetGunItem && isUseWeapon) // 우측 버튼 누를 때
         {
             crosshairObj.SetActive(true); // 크로스헤어 On
             // 견착 상태
@@ -180,7 +182,7 @@ public class PlayerManager : MonoBehaviour
             }
         }
 
-        if (Input.GetMouseButtonUp(1)) // 우측 버튼 뗄 때
+        if (Input.GetMouseButtonUp(1) && isGetGunItem && isUseWeapon) // 우측 버튼 뗄 때
         {
             crosshairObj.SetActive(false); // 크로스헤어 Off
             isAim = false;
@@ -307,10 +309,11 @@ public class PlayerManager : MonoBehaviour
 
     public void ChangeWeapon()
     {
-        if (Input.GetKeyDown(KeyCode.Alpha1))
+        if (Input.GetKeyDown(KeyCode.Alpha1) && isGetGunItem)
         {
             animator.SetTrigger("IsWeaponChange");
             shotgun2.SetActive(true);
+            isUseWeapon = true;
         }
         if (Input.GetKeyDown(KeyCode.Alpha4))
         {
@@ -342,6 +345,7 @@ public class PlayerManager : MonoBehaviour
                 audioSource.PlayOneShot(audioClipPikcup);
                 gunIconObj.SetActive(false);
                 Debug.Log($"Item : {hit.collider.name}");
+                isGetGunItem = true;
             }
         }
     }
