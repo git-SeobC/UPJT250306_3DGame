@@ -5,7 +5,8 @@ using TMPro;
 using Unity.Hierarchy;
 using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.Animations.Rigging; // NameSpace : 소속
+using UnityEngine.Animations.Rigging;
+using UnityEngine.Rendering.HighDefinition; // NameSpace : 소속
 
 public class PlayerManager : MonoBehaviour
 {
@@ -70,6 +71,9 @@ public class PlayerManager : MonoBehaviour
 
     private float weaponMaxDistance = 100.0f;
 
+    public GameObject crosshairObj; // 크로스헤어 오브젝트
+    public GameObject gunIconObj; // 총 아이콘 오브젝트, 총기 아이템 근처에서 On
+
     // Item pick 관련 변수
     public Vector3 boxSize = new Vector3(1f, 1f, 1f);
     public float castDistance = 5f;
@@ -79,7 +83,6 @@ public class PlayerManager : MonoBehaviour
     public LayerMask targetLayerMask;
     public MultiAimConstraint multiAimConstraint;
 
-    public GameObject crosshairObj; // 크로스헤어 오브젝트
 
 
     void Start()
@@ -94,6 +97,20 @@ public class PlayerManager : MonoBehaviour
         audioSource = GetComponent<AudioSource>();
         shotgun2.SetActive(false);
         animator.speed = animationSpeed;
+    }
+
+    void Update()
+    {
+
+        MouseSet();
+        CameraToggle();
+        AimSet();
+        PersonMovement();
+        GunFire();
+        ChangeWeapon();
+        //PickItemCheck();
+        Operate();
+
     }
 
     /// <summary>
@@ -318,24 +335,14 @@ public class PlayerManager : MonoBehaviour
         hits = Physics.BoxCastAll(origin, boxSize / 2, direction, Quaternion.identity, castDistance, itemLayer);
         foreach (var hit in hits)
         {
-            hit.collider.gameObject.SetActive(false);
-            Debug.Log($"Item : {hit.collider.name}");
+            if (hit.collider.name == "Item_Sniper")
+            {
+                hit.collider.gameObject.SetActive(false);
+                audioSource.PlayOneShot(audioClipPikcup);
+                gunIconObj.SetActive(false);
+                Debug.Log($"Item : {hit.collider.name}");
+            }
         }
-        audioSource.PlayOneShot(audioClipPikcup);
-    }
-
-    void Update()
-    {
-
-        MouseSet();
-        CameraToggle();
-        AimSet();
-        PersonMovement();
-        GunFire();
-        ChangeWeapon();
-        //PickItemCheck();
-        Operate();
-
     }
 
     void FirstPoersonMovement()
@@ -449,10 +456,23 @@ public class PlayerManager : MonoBehaviour
 
             animator.SetTrigger("Hit");
 
-            Debug.Log($"1 : {other.gameObject.transform.position}");
-            Debug.Log($"{other.gameObject.name}");
-            PlayerPositionReset();
-            Debug.Log($"2 : {other.gameObject.transform.position}");
+            //PlayerPositionReset();
+        }
+        Debug.Log($"    objLayer : {other.gameObject.layer}");
+        Debug.Log($"    item Layer : {LayerMask.NameToLayer("Item")}");
+        if (other.gameObject.layer == LayerMask.NameToLayer("Item"))
+        {
+            Debug.Log("Gun Icon Set true");
+            gunIconObj.SetActive(true);
+        }
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        if (other.gameObject.layer == LayerMask.NameToLayer("Item"))
+        {
+            Debug.Log("Gun Icon Set false");
+            gunIconObj.SetActive(false);
         }
     }
 }
