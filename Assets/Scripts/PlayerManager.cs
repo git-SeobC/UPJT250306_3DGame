@@ -4,7 +4,8 @@ using System.Threading;
 using TMPro;
 using Unity.Hierarchy;
 using Unity.VisualScripting;
-using UnityEngine; // NameSpace : 소속
+using UnityEngine;
+using UnityEngine.Animations.Rigging; // NameSpace : 소속
 
 public class PlayerManager : MonoBehaviour
 {
@@ -58,6 +59,7 @@ public class PlayerManager : MonoBehaviour
     public AudioClip audioClipWeaponChange;
 
     public AudioClip audioClipHitPlayer;
+    public AudioClip audioClipPikcup;
 
     public GameObject shotgun2;
 
@@ -68,6 +70,14 @@ public class PlayerManager : MonoBehaviour
 
     private float weaponMaxDistance = 100.0f;
 
+    // Item pick 관련 변수
+    public Vector3 boxSize = new Vector3(1f, 1f, 1f);
+    public float castDistance = 5f;
+    public LayerMask itemLayer;
+    public Transform itemGetPos;
+
+    public LayerMask targetLayerMask;
+    public MultiAimConstraint multiAimConstraint;
     void Start()
     {
         Cursor.lockState = CursorLockMode.Locked;
@@ -126,11 +136,10 @@ public class PlayerManager : MonoBehaviour
         // 카메라 줌 기능
         if (Input.GetMouseButtonDown(1)) // 우측 버튼 누를 때
         {
-
             // 견착 상태
             isAim = true;
+            multiAimConstraint.data.offset = new Vector3(-30, 0, 0);
             //animator.SetBool("IsAim", isAim);
-
             animator.SetLayerWeight(1, 1);
 
 
@@ -152,6 +161,7 @@ public class PlayerManager : MonoBehaviour
         if (Input.GetMouseButtonUp(1)) // 우측 버튼 뗄 때
         {
             isAim = false;
+            multiAimConstraint.data.offset = new Vector3(0, 0, 0);
             //animator.SetBool("IsAim", isAim);
             animator.SetLayerWeight(1, 0);
             isFire = false;
@@ -230,22 +240,39 @@ public class PlayerManager : MonoBehaviour
             audioSource.PlayOneShot(audioClipFire);
 
             Ray ray = new Ray(mainCamera.transform.position, mainCamera.transform.forward);
-            RaycastHit hit;
+            RaycastHit[] hits = Physics.RaycastAll(ray, weaponMaxDistance, targetLayerMask);
 
-            if (Physics.Raycast(ray, out hit, weaponMaxDistance))
+            if (hits.Length > 0)
             {
-                Debug.Log($"Hit : {hit.collider.gameObject.name}");
-                Debug.DrawLine(ray.origin, hit.point, Color.red, 2.0f);
-                if (hit.collider.gameObject.layer == LayerMask.NameToLayer("Enemy"))
+                int count = 0;
+                Debug.Log($"hits.lengh : {hits.Length}");
+                foreach (var hit in hits)
                 {
-                    hit.collider.gameObject.GetComponent<ZombieManager>().TakeDamage(20);
+                    if (count > 1) break;
+                    Debug.Log($"충돌 : {hit.collider.name}");
+                    Debug.DrawLine(ray.origin, hit.point, Color.red, 3.0f);
+                    count++;
                 }
-                //hit.collider.gameObject.SetActive(false);
             }
             else
             {
-                Debug.DrawLine(ray.origin, ray.origin + ray.direction * weaponMaxDistance, Color.green, 2.0f);
+                Debug.DrawLine(ray.origin, ray.origin + ray.direction * weaponMaxDistance, Color.green, 3.0f);
             }
+
+            //if (Physics.Raycast(ray, out hit, weaponMaxDistance))
+            //{
+            //    Debug.Log($"Hit : {hit.collider.gameObject.name}");
+            //    Debug.DrawLine(ray.origin, hit.point, Color.red, 2.0f);
+            //    if (hit.collider.gameObject.layer == LayerMask.NameToLayer("Enemy"))
+            //    {
+            //        hit.collider.gameObject.GetComponent<ZombieManager>().TakeDamage(20);
+            //    }
+            //    //hit.collider.gameObject.SetActive(false);
+            //}
+            //else
+            //{
+            //    Debug.DrawLine(ray.origin, ray.origin + ray.direction * weaponMaxDistance, Color.green, 2.0f);
+            //}
         }
 
         if (Input.GetMouseButtonUp(0))
@@ -268,6 +295,29 @@ public class PlayerManager : MonoBehaviour
         }
     }
 
+    void Operate()
+    {
+        AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
+        if (Input.GetKeyDown(KeyCode.E) && !stateInfo.IsName("PickItemFloor"))
+        {
+            animator.SetTrigger("Pick");
+        }
+    }
+
+    public void ItemPick()
+    {
+        Vector3 origin = itemGetPos.position;
+        Vector3 direction = itemGetPos.forward;
+        RaycastHit[] hits;
+        hits = Physics.BoxCastAll(origin, boxSize / 2, direction, Quaternion.identity, castDistance, itemLayer);
+        foreach (var hit in hits)
+        {
+            hit.collider.gameObject.SetActive(false);
+            Debug.Log($"Item : {hit.collider.name}");
+        }
+        audioSource.PlayOneShot(audioClipPikcup);
+    }
+
     void Update()
     {
 
@@ -277,7 +327,8 @@ public class PlayerManager : MonoBehaviour
         PersonMovement();
         GunFire();
         ChangeWeapon();
-        PickItemCheck();
+        //PickItemCheck();
+        Operate();
 
     }
 
