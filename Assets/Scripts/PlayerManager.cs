@@ -78,6 +78,10 @@ public class PlayerManager : MonoBehaviour
 
     public LayerMask targetLayerMask;
     public MultiAimConstraint multiAimConstraint;
+
+    public GameObject crosshairObj; // 크로스헤어 오브젝트
+
+
     void Start()
     {
         Cursor.lockState = CursorLockMode.Locked;
@@ -136,6 +140,7 @@ public class PlayerManager : MonoBehaviour
         // 카메라 줌 기능
         if (Input.GetMouseButtonDown(1)) // 우측 버튼 누를 때
         {
+            crosshairObj.SetActive(true); // 크로스헤어 On
             // 견착 상태
             isAim = true;
             multiAimConstraint.data.offset = new Vector3(-30, 0, 0);
@@ -160,6 +165,7 @@ public class PlayerManager : MonoBehaviour
 
         if (Input.GetMouseButtonUp(1)) // 우측 버튼 뗄 때
         {
+            crosshairObj.SetActive(false); // 크로스헤어 Off
             isAim = false;
             multiAimConstraint.data.offset = new Vector3(0, 0, 0);
             //animator.SetBool("IsAim", isAim);
