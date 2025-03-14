@@ -588,7 +588,7 @@ AnimatorState:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: PickItemFloor
+  m_Name: PickItem
   m_Speed: 2
   m_CycleOffset: 0
   m_Transitions:
@@ -602,7 +602,7 @@ AnimatorState:
   m_MirrorParameterActive: 0
   m_CycleOffsetParameterActive: 0
   m_TimeParameterActive: 0
-  m_Motion: {fileID: 7400000, guid: c9fa60fc2912f7f4a962b52d65409763, type: 2}
+  m_Motion: {fileID: 7400000, guid: 4f5d458f4a2de5e4d94afb1f2ea09f2e, type: 2}
   m_Tag: 
   m_SpeedParameter: 
   m_MirrorParameter: 
