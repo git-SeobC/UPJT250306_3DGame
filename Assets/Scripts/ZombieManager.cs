@@ -1,6 +1,7 @@
 using System.Collections;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.AI;
 using UnityEngine.PostProcessing;
 
 public enum EZombieState
@@ -36,7 +37,7 @@ public class ZombieManager : MonoBehaviour
     private int currentPoint = 0;            // 현재 순찰 경로 지점 인덱스
     public float moveSpeed = 2.0f;           // 이동속도
     public float trackingRange = 7.0f;       // 추적 범위 설정
-    private float tempTrackingRange = 0f;    // 기존 추적 범위
+    private float tempTrackingRange;         // 기존 추적 범위
     private float evadeRange = 5.0f;         // 도망 상태 회피 거리
     private float distanceToTarget;          // Target과의 거리 계산 값
     public float idleTime = 2.0f;            // 각 상태 전환 후 대기 시간
@@ -51,13 +52,16 @@ public class ZombieManager : MonoBehaviour
     //private bool isIdle = false;             // 다음 작업 대기상태
     //private bool isChase = false;            // 추적 상태
 
+    private NavMeshAgent agent;
 
     void Start()
     {
         animator = GetComponent<Animator>();
         audioSource = GetComponent<AudioSource>();
+        agent = GetComponent<NavMeshAgent>();
         ChangeState(currentState);
-        trackingRange = tempTrackingRange;
+        tempTrackingRange = trackingRange;
+
         //// Die 애니메이션 클립의 길이
         //foreach (AnimationClip clip in animator.runtimeAnimatorController.animationClips)
         //{
@@ -131,16 +135,6 @@ public class ZombieManager : MonoBehaviour
         #endregion
     }
 
-    //private void ResetState()
-    //{
-    //    isAttack = false;
-    //    isWaiting = false;
-    //    isDie = false;
-    //    isPatrol = false;
-    //    isIdle = false;
-    //    isChase = false;
-    //}
-
     public void ChangeState(EZombieState newState)
     {
         if (stateRoutine != null)
@@ -168,7 +162,7 @@ public class ZombieManager : MonoBehaviour
                 stateRoutine = StartCoroutine(Evade());
                 break;
             case EZombieState.Damage:
-                stateRoutine = StartCoroutine(TakeDamage(10));
+                stateRoutine = StartCoroutine(TakeDamage(20));
                 break;
             case EZombieState.Attack:
                 stateRoutine = StartCoroutine(Attack());
@@ -178,9 +172,10 @@ public class ZombieManager : MonoBehaviour
 
     private IEnumerator Idle()
     {
-        Debug.Log($"{gameObject.name} : 대기중");
+        //Debug.Log($"{gameObject.name} : 대기중");
         animator.Play("Idle_Z");
         audioSource.Play();
+        trackingRange = tempTrackingRange;
         //if (!audioSource.isPlaying) audioSource.PlayOneShot(audioClipIdle);
 
         while (currentState == EZombieState.Idle)
@@ -212,18 +207,20 @@ public class ZombieManager : MonoBehaviour
 
     private IEnumerator Patrol()
     {
-        Debug.Log($"{gameObject.name} : 순찰중");
+        //Debug.Log($"{gameObject.name} : 순찰중");
 
         while (currentState == EZombieState.Patrol)
         {
             if (patrolPoints.Length > 0)
             {
-                trackingRange = tempTrackingRange;
                 animator.SetBool("IsWalk", true);
                 Transform targetPoint = patrolPoints[currentPoint];
                 Vector3 direction = (targetPoint.position - transform.position).normalized;
-                transform.position += direction * moveSpeed * Time.deltaTime;
-                transform.LookAt(targetPoint.transform);
+                //transform.position += direction * moveSpeed * Time.deltaTime;
+                //transform.LookAt(targetPoint.transform);
+                agent.speed = moveSpeed;
+                agent.isStopped = false;
+                agent.destination = targetPoint.position;
 
                 if (Vector3.Distance(transform.position, targetPoint.position) < 0.3f)
                 {
@@ -249,15 +246,19 @@ public class ZombieManager : MonoBehaviour
 
     private IEnumerator Chase(Transform target)
     {
-        Debug.Log($"{gameObject.name} : 추적중");
+        //Debug.Log($"{gameObject.name} : 추적중");
 
         while (currentState == EZombieState.Chase)
         {
             float distance = Vector3.Distance(transform.position, target.position);
 
             Vector3 direction = (target.position - transform.position).normalized;
-            transform.position += direction * moveSpeed * Time.deltaTime;
-            transform.LookAt(target.position);
+            //transform.position += direction * moveSpeed * Time.deltaTime;
+            //transform.LookAt(target.position);
+            agent.speed = moveSpeed;
+            agent.isStopped = false;
+            agent.destination = this.target.position;
+
             animator.SetBool("IsWalk", true);
 
             if (distance < attackRange)
@@ -281,8 +282,11 @@ public class ZombieManager : MonoBehaviour
 
     private IEnumerator Attack()
     {
-        Debug.Log($"{gameObject.name} : 공격중");
-        transform.LookAt(target.position);
+        //Debug.Log($"{gameObject.name} : 공격중");
+        //transform.LookAt(target.position);
+        agent.isStopped = true;
+        agent.destination = target.position;
+
         animator.SetBool("IsWalk", false);
         animator.SetTrigger("Attack");
         audioSource.PlayOneShot(audioClipHit);
@@ -304,7 +308,7 @@ public class ZombieManager : MonoBehaviour
 
     private IEnumerator Evade()
     {
-        Debug.Log($"{gameObject.name} : 도망중");
+        //Debug.Log($"{gameObject.name} : 도망중");
         animator.SetBool("IsWalk", true);
         Vector3 evadeDirection = (transform.position - target.position).normalized;
 
@@ -312,12 +316,12 @@ public class ZombieManager : MonoBehaviour
         float timer = 0.0f;
 
         Quaternion targetRotation = Quaternion.LookRotation(evadeDirection);
-        transform.rotation = targetRotation;
+        //transform.rotation = targetRotation;
         // LookAt을 통해 바라볼 타겟이 없기 때문에 자체 Rotation을 통해 회전
 
         while (currentState == EZombieState.Evade && timer < evadeTime)
         {
-            transform.position += evadeDirection * moveSpeed * Time.deltaTime;
+            //transform.position += evadeDirection * moveSpeed * Time.deltaTime;
             timer += Time.deltaTime;
             yield return null;
         }
@@ -328,7 +332,7 @@ public class ZombieManager : MonoBehaviour
 
     private IEnumerator TakeDamage(float pDamaged)
     {
-        Debug.Log($"{gameObject.name} : 공격당함 -({pDamaged})-");
+        //Debug.Log($"{gameObject.name} : 공격당함 -({pDamaged})-");
 
         while (currentState == EZombieState.Damage)
         {
@@ -344,6 +348,7 @@ public class ZombieManager : MonoBehaviour
             }
             else
             {
+                tempTrackingRange = trackingRange;
                 trackingRange *= 2;
                 yield return new WaitForSeconds(attackDelay);
                 ChangeState(EZombieState.Chase);
@@ -353,12 +358,13 @@ public class ZombieManager : MonoBehaviour
 
     private IEnumerator Die()
     {
-        Debug.Log($"{gameObject.name} : Zombie Dead");
+        //Debug.Log($"{gameObject.name} : Zombie Dead");
+        gameObject.GetComponent<CapsuleCollider>().enabled = false;
         animator.SetBool("IsWalk", false);
         animator.SetTrigger("Dying");
         audioSource.PlayOneShot(audioClipDie);
-        yield return new WaitForSeconds(5.0f);
-        //gameObject.SetActive(false);
+        Destroy(gameObject, 3);
+        yield return null;
     }
 }
 
