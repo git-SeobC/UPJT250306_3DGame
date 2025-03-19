@@ -283,7 +283,7 @@ public class ZombieManager : MonoBehaviour
     private IEnumerator Attack()
     {
         //Debug.Log($"{gameObject.name} : 공격중");
-        //transform.LookAt(target.position);
+        transform.LookAt(target.position);
         agent.isStopped = true;
         agent.destination = target.position;
 
@@ -333,6 +333,7 @@ public class ZombieManager : MonoBehaviour
     private IEnumerator TakeDamage(float pDamaged)
     {
         //Debug.Log($"{gameObject.name} : 공격당함 -({pDamaged})-");
+        gameObject.GetComponent<Rigidbody>().isKinematic = false;
 
         while (currentState == EZombieState.Damage)
         {
