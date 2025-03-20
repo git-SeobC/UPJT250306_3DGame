@@ -206,9 +206,8 @@ MonoBehaviour:
   audioClipHitPlayer: {fileID: 8300000, guid: 979243758a1b17546b6d6bf82b68ee07, type: 3}
   audioClipPikcup: {fileID: 8300000, guid: f1cd09e5696861c40b53b4683f6381c0, type: 3}
   audioClipDefaultStep: {fileID: 8300000, guid: a70895712392d4345be385abfae08f28, type: 3}
+  audioClipEmptyGunShot: {fileID: 8300000, guid: 18419ed242a2764409f26a3d65a1e69d, type: 3}
   aimTarget: {fileID: 2400496634201593148}
-  crosshairObj: {fileID: 0}
-  gunIconObj: {fileID: 0}
   targetLayerMask:
     serializedVersion: 2
     m_Bits: 64
@@ -226,9 +225,13 @@ MonoBehaviour:
   gunFireEffect: {fileID: 19800000, guid: 8eaaa4f553116f44b8459bc24201c514, type: 3}
   DamageParticleSystem: {fileID: 19800002, guid: 957385c45b877e645a128e11a3efb2f9, type: 3}
   audioClipDamage: {fileID: 8300000, guid: d5cf0bca1f745ec4d9ba288091d1cf57, type: 3}
+  gunIconObj: {fileID: 0}
+  crosshairObj: {fileID: 0}
   bulletText: {fileID: 0}
   flashLightObj: {fileID: 185089162046341729}
   audioClipLightOn: {fileID: 8300000, guid: ed1de67fb8cc1314ab59250bd8bd426d, type: 3}
+  playerHP: 100
+  pauseObj: {fileID: 0}
 --- !u!95 &453485213429131698
 Animator:
   serializedVersion: 7

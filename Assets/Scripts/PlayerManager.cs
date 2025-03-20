@@ -12,6 +12,8 @@ using UnityEngine.UI;
 
 public class PlayerManager : MonoBehaviour
 {
+    public static PlayerManager Instance { get; private set; }
+
     private float moveSpeed = 5.0f; // 플레이어 이동 속도
     public float mouseSensitivity = 100.0f; // 마우스 감도
     public Transform cameraTransform; // 카메라의 Transform
@@ -106,6 +108,24 @@ public class PlayerManager : MonoBehaviour
 
     public int playerHP = 100;
 
+    public GameObject pauseObj;
+    private bool isPause = false;
+
+    private void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+        else
+        {
+            if (Instance != this)
+            {
+                Destroy(gameObject);
+            }
+        }
+    }
+
     void Start()
     {
         Cursor.lockState = CursorLockMode.Locked;
@@ -125,7 +145,6 @@ public class PlayerManager : MonoBehaviour
 
     void Update()
     {
-
         MouseSet();
         CameraToggle();
         AimSet();
@@ -138,7 +157,44 @@ public class PlayerManager : MonoBehaviour
         {
             ActionFlashLigh();
         }
+        if (Input.GetKeyDown(KeyCode.P))
+        {
+            isPause = !isPause;
+            if (isPause)
+            {
+                Pause();
+            }
+            else
+            {
+                ReGame();
+            }
+        }
+    }
 
+    public void ReGame()
+    {
+        //audioSource.PlayOneShot(audioClipFire);
+        SoundManager.Instance.PlaySfx("GunFireSniper", Vector3.zero, 0f);
+        pauseObj.SetActive(false);
+        Time.timeScale = 1; // 게임 시간 재개
+    }
+
+    void Pause()
+    {
+        //audioSource.PlayOneShot(audioClipDamage);
+        SoundManager.Instance.PlaySfx("PlayerHit", Vector3.zero, 0f);
+        pauseObj.SetActive(true);
+        Time.timeScale = 0; // 게임 시간 정지
+    }
+
+    public void Exit()
+    {
+        //audioSource.PlayOneShot(audioClipHitPlayer);
+        SoundManager.Instance.PlaySfx("PlayerDie", Vector3.zero, 0f);
+        pauseObj.SetActive(false);
+        Time.timeScale = 1;
+        Application.Quit(); // 종료
+        isPause = false;
     }
 
     /// <summary>
@@ -146,6 +202,8 @@ public class PlayerManager : MonoBehaviour
     /// </summary>
     public void MouseSet()
     {
+        if (isPause) return;
+
         // 마우스 입력을 받아 카메라와 플레이어 회전 처리
         float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
         float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;
@@ -297,7 +355,6 @@ public class PlayerManager : MonoBehaviour
 
                     StartCoroutine(FireTimer());
                     animator.SetTrigger("Fire");
-                    //audioSource.PlayOneShot(audioClipFire);
 
                     Ray ray = new Ray(mainCamera.transform.position, mainCamera.transform.forward);
                     RaycastHit hit;
@@ -328,7 +385,8 @@ public class PlayerManager : MonoBehaviour
                         Debug.DrawLine(ray.origin, hit.point, Color.red, 2.0f);
                         ParticleSystem particle = Instantiate(DamageParticleSystem, hit.point, Quaternion.identity);
                         particle.Play();
-                        audioSource.PlayOneShot(audioClipDamage);
+                        SoundManager.Instance.PlaySfx("TakeBullet", hit.collider.transform.position);
+
                         if (hit.collider.gameObject.layer == LayerMask.NameToLayer("Enemy"))
                         {
                             hit.collider.gameObject.GetComponent<ZombieManager>().ChangeState(EZombieState.Damage);
@@ -342,7 +400,8 @@ public class PlayerManager : MonoBehaviour
                 }
                 else
                 {
-                    audioSource.PlayOneShot(audioClipEmptyGunShot);
+                    //audioSource.PlayOneShot(audioClipEmptyGunShot);
+                    SoundManager.Instance.PlaySfx("EmptyGunFire", transform.position);
                     return;
                 }
             }
@@ -380,6 +439,7 @@ public class PlayerManager : MonoBehaviour
     void ActionFlashLigh()
     {
         audioSource.PlayOneShot(audioClipLightOn);
+        SoundManager.Instance.PlaySfx("LightOnOff", transform.position);
         isFlashLightOn = !isFlashLightOn;
         flashLightObj.SetActive(isFlashLightOn);
     }
@@ -420,7 +480,8 @@ public class PlayerManager : MonoBehaviour
             if (hit.collider.name == "Item_Sniper")
             {
                 hit.collider.gameObject.SetActive(false);
-                audioSource.PlayOneShot(audioClipPikcup);
+                //audioSource.PlayOneShot(audioClipPikcup);
+                SoundManager.Instance.PlaySfx("TakeItem", transform.position);
                 gunIconObj.SetActive(false);
                 //Debug.Log($"Item : {hit.collider.name}");
                 isGetGunItem = true;
@@ -430,7 +491,8 @@ public class PlayerManager : MonoBehaviour
             else if (hit.collider.name == "ItemBullet")
             {
                 hit.collider.gameObject.SetActive(false);
-                audioSource.PlayOneShot(audioClipPikcup);
+                //audioSource.PlayOneShot(audioClipPikcup);
+                SoundManager.Instance.PlaySfx("TakeItem", transform.position);
 
                 saveBulletCount += 5;
                 if (saveBulletCount > 20)
@@ -526,13 +588,15 @@ public class PlayerManager : MonoBehaviour
 
     public void WeaponChangeSoundEvent()
     {
-        audioSource.PlayOneShot(audioClipWeaponChange);
+        //audioSource.PlayOneShot(audioClipWeaponChange);
+        SoundManager.Instance.PlaySfx("EquipGun", transform.position);
         Debug.Log("총 체인지 사운드");
     }
 
     public void WeaponFireSoundEvent()
     {
-        audioSource.PlayOneShot(audioClipFire);
+        //audioSource.PlayOneShot(audioClipFire);
+        SoundManager.Instance.PlaySfx("GunFireSniper", transform.position);
         gunFireEffect.Play();
     }
 
@@ -550,17 +614,29 @@ public class PlayerManager : MonoBehaviour
         {
             if (hit.collider.gameObject.tag == "Wood")
             {
-                if (pEvent.animatorClipInfo.weight > 0.4f) audioSource.PlayOneShot(audioClipDefaultStep);
+                if (pEvent.animatorClipInfo.weight > 0.4f)
+                {
+                    //audioSource.PlayOneShot(audioClipDefaultStep);
+                    SoundManager.Instance.PlaySfx("StepDefault", transform.position);
+                }
                 //if (!audioSource.isPlaying) audioSource.PlayOneShot(audioClipDefaultStep);
             }
             else if (hit.collider.gameObject.tag == "Rock")
             {
-                if (pEvent.animatorClipInfo.weight > 0.4f) audioSource.PlayOneShot(audioClipDefaultStep);
+                if (pEvent.animatorClipInfo.weight > 0.4f)
+                {
+                    //audioSource.PlayOneShot(audioClipDefaultStep);
+                    SoundManager.Instance.PlaySfx("StepDefault", transform.position);
+                }
                 //if (!audioSource.isPlaying) audioSource.PlayOneShot(audioClipDefaultStep);
             }
             else
             {
-                if (pEvent.animatorClipInfo.weight > 0.4f) audioSource.PlayOneShot(audioClipDefaultStep);
+                if (pEvent.animatorClipInfo.weight > 0.4f)
+                {
+                    //audioSource.PlayOneShot(audioClipDefaultStep);
+                    SoundManager.Instance.PlaySfx("StepDefault", transform.position);
+                }
                 //if (!audioSource.isPlaying) audioSource.PlayOneShot(audioClipDefaultStep);
             }
         }
@@ -572,7 +648,8 @@ public class PlayerManager : MonoBehaviour
         {
             if (other.gameObject.CompareTag("Attack"))
             {
-                audioSource.PlayOneShot(audioClipHitPlayer);
+                //audioSource.PlayOneShot(audioClipHitPlayer);
+                SoundManager.Instance.PlaySfx("PlayerHit", transform.position);
 
                 animator.SetTrigger("Hit");
 
@@ -589,6 +666,9 @@ public class PlayerManager : MonoBehaviour
         {
             //Debug.Log("Gun Icon Set true");
             gunIconObj.SetActive(true);
+
+            // 오브젝트 상속관계 변경 (.SetParent)
+            //other.gameObject.transform.SetParent(transform);
         }
     }
 
