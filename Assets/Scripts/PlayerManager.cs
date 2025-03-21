@@ -4,11 +4,20 @@ using System.Threading;
 using TMPro;
 using Unity.Hierarchy;
 using Unity.VisualScripting;
+using Unity.VisualScripting.Antlr3.Runtime;
 using UnityEngine;
 using UnityEngine.Animations.Rigging;
 using UnityEngine.Rendering.HighDefinition; // NameSpace : 소속
 using UnityEngine.UI;
 
+
+public enum WeaponMode
+{
+    Pistol,
+    Shotgun,
+    Rifle,
+    Sniper
+}
 
 public class PlayerManager : MonoBehaviour
 {
@@ -97,19 +106,33 @@ public class PlayerManager : MonoBehaviour
     // UI
     public GameObject gunIconObj; // 총 아이콘 오브젝트, 총기 아이템 근처에서 On
     public GameObject crosshairObj; // 크로스헤어 오브젝트
+    public GameObject BulletCountBtn;
+    public GameObject PlayerHpBtn;
     public Text bulletText;
+    public Text playerHpText;
+    public int playerHP = 100;
     private int fireBulletCount = 0;
     private int saveBulletCount = 0;
+
+    // Pause UI
+    public GameObject pauseObj;
+    private bool isPause = false;
 
     // Flash Light
     public GameObject flashLightObj;
     public AudioClip audioClipLightOn;
     private bool isFlashLightOn = false;
 
-    public int playerHP = 100;
-
-    public GameObject pauseObj;
-    private bool isPause = false;
+    private WeaponMode currentWeaponMode = WeaponMode.Sniper;
+    private int ShotgunRayCount = 5; // 탄 퍼짐 개수
+    private float shotgunSpreadAngle = 10.0f; // 샷건 탄 퍼짐 각도
+    private float recoilStrength = 2.0f; // 반동 세기
+    private float maxRecoilAngle = 10.0f; // 반동 각도
+    private float currentRecoil = 0.0f; // 현재 반동
+    private float shakeDuration = 0.1f; // 흔들림 지속 시간
+    private float shakeMagnitude = 0.1f; // 흔들림 크기
+    private Vector3 originalCameraPosition; // 반동전 기존 포지션
+    private Coroutine cameraShakeCoroutine; // 반동 코루틴
 
     private void Awake()
     {
@@ -139,8 +162,10 @@ public class PlayerManager : MonoBehaviour
         shotgun2.SetActive(false);
         animator.speed = animationSpeed;
         bulletText.text = $"{fireBulletCount}/{saveBulletCount}";
-        //bulletText.gameObject.SetActive(false);
+        bulletText.gameObject.SetActive(true);
         flashLightObj.SetActive(false);
+        PlayerHpBtn.SetActive(true);
+        BulletCountBtn.SetActive(true);
     }
 
     void Update()
@@ -169,6 +194,75 @@ public class PlayerManager : MonoBehaviour
                 ReGame();
             }
         }
+
+        if (currentRecoil > 0)
+        {
+            currentRecoil -= recoilStrength * Time.deltaTime;
+            currentRecoil = Mathf.Clamp(currentRecoil, 0, maxRecoilAngle);
+            Quaternion currentRotation = Camera.main.transform.rotation;
+            Quaternion recoilRotation = Quaternion.Euler(-currentRecoil, 0, 0);
+            Camera.main.transform.rotation = currentRotation * recoilRotation; // 카메라를 제어하는 코드를 꺼야함
+        }
+    }
+
+    void FireShotgun()
+    {
+        for (int i = 0; i < ShotgunRayCount; i++)
+        {
+            RaycastHit hit;
+
+            Vector3 origin = Camera.main.transform.position;
+            Vector3 spreadDirection = GetSpreadDirection(Camera.main.transform.forward, shotgunSpreadAngle);
+            Debug.DrawRay(origin, spreadDirection * castDistance, Color.green, 2.0f);
+            if (Physics.Raycast(origin, spreadDirection, out hit, castDistance, targetLayerMask))
+            {
+                Debug.Log("Shotgun Hit : " + hit.collider.name);
+            }
+        }
+    }
+
+    Vector3 GetSpreadDirection(Vector3 forwardDirection, float spreadAngle)
+    {
+        float spreadX = Random.Range(-spreadAngle, spreadAngle);
+        float spreadY = Random.Range(-spreadAngle, spreadAngle);
+        Vector3 spreadDirection = Quaternion.Euler(spreadX, spreadY, 0) * forwardDirection;
+        return spreadDirection;
+    }
+
+    void ApplyRecoil()
+    {
+        Quaternion currentRotation = Camera.main.transform.rotation; // 현재 카메라 월드 회전값
+        Quaternion recoilRotation = Quaternion.Euler(-currentRecoil, 0, 0); // 반동 계산 X축 상하 회전
+        Camera.main.transform.rotation = currentRotation * recoilRotation; // 현재 회전 값에 반동 곱, 새로운 회전값
+        currentRecoil += recoilStrength; // 반동 증가
+        currentRecoil = Mathf.Clamp(currentRecoil, 0, maxRecoilAngle); // 반동값 제한
+    }
+
+    void StartCameraShake()
+    {
+        if (cameraShakeCoroutine != null)
+        {
+            StopCoroutine(cameraShakeCoroutine);
+        }
+        cameraShakeCoroutine = StartCoroutine(CameraShake(shakeDuration, shakeMagnitude));
+    }
+
+    IEnumerator CameraShake(float duration, float magnitude)
+    {
+        float elapsed = 0.0f;
+        Vector3 originalPosition = Camera.main.transform.position;
+        while (elapsed < duration)
+        {
+            float offsetX = Random.Range(-1.0f, 1.0f) * magnitude;
+            float offsetY = Random.Range(-1.0f, 1.0f) * magnitude;
+
+            Camera.main.transform.position = originalPosition + new Vector3(offsetX, offsetY, 0);
+
+            elapsed += Time.deltaTime;
+
+            yield return null;
+        }
+        Camera.main.transform.position = originalPosition;
     }
 
     public void ReGame()
@@ -343,6 +437,11 @@ public class PlayerManager : MonoBehaviour
         {
             if (isAim && !isFire)
             {
+                if (currentWeaponMode == WeaponMode.Pistol) { }
+                else if (currentWeaponMode == WeaponMode.Pistol) { }
+                else if (currentWeaponMode == WeaponMode.Pistol) { }
+
+
                 if (fireBulletCount > 0)
                 {
                     fireBulletCount--;
@@ -355,6 +454,9 @@ public class PlayerManager : MonoBehaviour
 
                     StartCoroutine(FireTimer());
                     animator.SetTrigger("Fire");
+
+                    ApplyRecoil();
+                    StartCameraShake();
 
                     Ray ray = new Ray(mainCamera.transform.position, mainCamera.transform.forward);
                     RaycastHit hit;
@@ -477,6 +579,7 @@ public class PlayerManager : MonoBehaviour
         DebugBox(origin, direction);
         foreach (var hit in hits)
         {
+            Debug.Log($"{hit.collider.name}");
             if (hit.collider.name == "Item_Sniper")
             {
                 hit.collider.gameObject.SetActive(false);
@@ -500,6 +603,20 @@ public class PlayerManager : MonoBehaviour
                     saveBulletCount = 20;
                 }
                 bulletText.text = $"{fireBulletCount}/{saveBulletCount}";
+            }
+            else if (hit.collider.gameObject.tag == "Door")
+            {
+                if (hit.collider.GetComponent<DoorManager>().isOpen)
+                {
+                    hit.collider.GetComponent<Animator>().SetTrigger("OpenBackward");
+                    DoorManager.Instance.isOpen = false;
+                }
+                else
+                {
+                    hit.collider.GetComponent<Animator>().SetTrigger("OpenForward");
+                    DoorManager.Instance.isOpen = true;
+                }
+                //DoorManager.Instance.DoorAction();
             }
         }
     }
@@ -597,7 +714,7 @@ public class PlayerManager : MonoBehaviour
     {
         //audioSource.PlayOneShot(audioClipFire);
         SoundManager.Instance.PlaySfx("GunFireSniper", transform.position);
-        gunFireEffect.Play();
+        //ParticleManager.Instance.ParticlePlay(ParticleType.WeaponFire, );
     }
 
     public void PlayerPositionReset()
@@ -642,6 +759,21 @@ public class PlayerManager : MonoBehaviour
         }
     }
 
+    private void PlayerHealth(int damage)
+    {
+        playerHP += damage;
+        if (playerHP <= 0)
+        {
+            Destroy(gameObject);
+        }
+        else if (playerHP > 100)
+        {
+            playerHP = 100;
+        }
+
+        playerHpText.text = $"{playerHP}";
+    }
+
     private void OnTriggerEnter(Collider other)
     {
         if (other.gameObject.layer == LayerMask.NameToLayer("Enemy"))
@@ -652,8 +784,8 @@ public class PlayerManager : MonoBehaviour
                 SoundManager.Instance.PlaySfx("PlayerHit", transform.position);
 
                 animator.SetTrigger("Hit");
-
-                playerHP -= 20;
+                
+                PlayerHealth(other.GetComponentInParent<ZombieManager>().ZombiePower);
 
                 //Debug.Log("Player Trigger Collision");
                 //Debug.Log("앙 마자띠");

@@ -18,7 +18,7 @@ public enum EZombieState
 
 public class ZombieManager : MonoBehaviour
 {
-    public float hp = 100f;
+    public float ZombieHp = 100f;
     private Animator animator;
     //private float dieAnimationLength;
 
@@ -40,8 +40,8 @@ public class ZombieManager : MonoBehaviour
     private float evadeRange = 5.0f;         // 도망 상태 회피 거리
     private float distanceToTarget;          // Target과의 거리 계산 값
     public float idleTime = 2.0f;            // 각 상태 전환 후 대기 시간
-    private float zombieHp = 10.0f;
     private Coroutine stateRoutine;          // 진행중인 상태 코루틴
+    public int ZombiePower;
 
     // 상태 Boolean
     //private bool isAttack = false;           // 공격 상태
@@ -363,9 +363,9 @@ public class ZombieManager : MonoBehaviour
             animator.SetTrigger("Hit");
             //audioSource.PlayOneShot(audioClipHit);
             SoundManager.Instance.PlaySfx("HitZombie", transform.position);
-            hp -= pDamaged;
+            ZombieHp -= pDamaged;
 
-            if (hp <= 0)
+            if (ZombieHp <= 0)
             {
                 ChangeState(EZombieState.Die);
                 yield break;
@@ -394,7 +394,7 @@ public class ZombieManager : MonoBehaviour
 
     private IEnumerator JumpAcrossLink()
     {
-        Debug.Log(gameObject.name + "  좀비 점프 ");
+        //Debug.Log(gameObject.name + "  좀비 점프 ");
         isJumping = true;
         agent.isStopped = true; // 에이전트 멈춤
 

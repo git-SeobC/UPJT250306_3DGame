@@ -40,8 +40,8 @@ public class TitleMenuManager : MonoBehaviour
     {
         while (isMovingBetweenPoints)
         {
-            yield return StartCoroutine(MoveCamera(point1.position, point2.position, 2.0f)); // point1 -> point2로 이동
-            yield return StartCoroutine(MoveCamera(point2.position, point1.position, 2.0f)); // point2 -> point1로 이동
+            yield return StartCoroutine(MoveCamera(point1.position, point2.position)); // point1 -> point2로 이동
+            yield return StartCoroutine(MoveCamera(point2.position, point1.position)); // point2 -> point1로 이동
         }
     }
 
@@ -56,15 +56,15 @@ public class TitleMenuManager : MonoBehaviour
         StartCoroutine(CameraMoveToPlayer());
 
         player.SetActive(true);
-        PlayerManager playerManager = player.GetComponent<PlayerManager>();
-        if (playerManager != null)
-        {
-            playerManager.enabled = true;
-        }
-        else
-        {
-            Debug.LogError("PlayerManager 컴포넌트를 찾을 수 없습니다.");
-        }
+        //PlayerManager playerManager = player.GetComponent<PlayerManager>();
+        //if (playerManager != null)
+        //{
+        //    playerManager.enabled = true;
+        //}
+        //else
+        //{
+        //    Debug.LogError("PlayerManager 컴포넌트를 찾을 수 없습니다.");
+        //}
     }
 
     private IEnumerator CameraMoveToPlayer()
@@ -75,21 +75,6 @@ public class TitleMenuManager : MonoBehaviour
         float duration = 4.0f;
 
         yield return StartCoroutine(MoveCameraBezier(startPosition, passPoint.position, targetPosition, duration));
-
-        //float durationToTarget = 5.0f;
-        //float durationToMovePoint = 3.0f;
-        //yield return StartCoroutine(MoveCamera(startPosition, movePoint.position, durationToMovePoint));
-        //yield return StartCoroutine(MoveCamera(movePoint.position, targetPosition, durationToTarget));
-
-        //float elapsedTime = 0f;
-        //while (elapsedTime < duration)
-        //{
-        //    camera.transform.position = Vector3.Lerp(startPosition, targetPosition, elapsedTime / duration);
-        //    camera.transform.LookAt(player.transform);
-        //    elapsedTime += Time.deltaTime;
-        //    yield return null;
-        //}
-        //camera.transform.position = targetPosition; // 최종 위치 설정
     }
 
     private IEnumerator MoveCameraBezier(Vector3 start, Vector3 control, Vector3 end, float duration)
@@ -112,22 +97,22 @@ public class TitleMenuManager : MonoBehaviour
             yield return null;
         }
 
-        camera.transform.position = end; // 최종 위치 설정
+        camera.transform.position = end;
     }
 
-    private IEnumerator MoveCamera(Vector3 from, Vector3 to, float duration)
+    private IEnumerator MoveCamera(Vector3 from, Vector3 end)
     {
         float elapsedTime = 0f;
 
-        while (elapsedTime < duration)
+        while (elapsedTime < 6.0f)
         {
-            camera.transform.position = Vector3.Lerp(from, to, elapsedTime / duration); // 선형 보간
+            camera.transform.position = Vector3.Lerp(from, end, elapsedTime / 6.0f);
             camera.transform.LookAt(passPoint);
             elapsedTime += Time.deltaTime;
             yield return null;
         }
 
-        camera.transform.position = to; // 최종 위치 설정
+        camera.transform.position = end;
     }
 
     public void LoadScene(string pSceneName)
