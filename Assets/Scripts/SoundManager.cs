@@ -36,7 +36,7 @@ public class SoundManager : MonoBehaviour
             Instance = this;
             DontDestroyOnLoad(gameObject);
             InitializeAudioClip();
-            SoundManager.Instance.PlayBGM("TitleBgm");
+            SoundManager.Instance.PlayBGM("TitleBgm", 0.2f);
         }
         else
         {

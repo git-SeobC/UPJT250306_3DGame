@@ -19,7 +19,7 @@ public class ParticleManager : MonoBehaviour
 
     public GameObject weaponexplosionParticle;
     public GameObject weaponFireParticle;
-    public GameObject weaponSmokeParticle;
+    //public GameObject weaponSmokeParticle;
 
     public int poolSize = 30;
 
@@ -37,7 +37,7 @@ public class ParticleManager : MonoBehaviour
 
         particleSystemDic.Add(ParticleType.DamageExplosion, weaponexplosionParticle);
         particleSystemDic.Add(ParticleType.WeaponFire, weaponFireParticle);
-        particleSystemDic.Add(ParticleType.WeaponSmoke, weaponSmokeParticle);
+        //particleSystemDic.Add(ParticleType.WeaponSmoke, weaponSmokeParticle);
 
         foreach (var type in particleSystemDic.Keys)
         {

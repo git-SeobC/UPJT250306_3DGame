@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
 public class TitleMenuManager : MonoBehaviour
@@ -10,10 +11,22 @@ public class TitleMenuManager : MonoBehaviour
     public Transform playerHead;
     public Camera camera;
     public GameObject TitleUI;
+    public GameObject SettingsUI;
+    public GameObject PlayerHPUI;
+    public GameObject BulletCountUI;
     public Transform passPoint;
     public Transform point1;
     public Transform point2;
     private bool isMovingBetweenPoints = true;
+
+    public Image EndPanel;
+    public Text EndText;
+    public Text RetryText;
+    public float fadeDuration = 3.0f;
+    public string nextSceneName;
+    private bool isGameEnd = false;
+
+    private bool isSettings = false;
 
     void Awake()
     {
@@ -32,8 +45,26 @@ public class TitleMenuManager : MonoBehaviour
     {
         player.SetActive(false);
         TitleUI.SetActive(true);
-
         StartCoroutine(MoveBetweenPoints());
+    }
+
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.G))
+        {
+            StartCoroutine(FadeInAndLoadScene());
+            //GameManager.Instance.OnCaption("NoHouseKey");
+        }
+        if (isGameEnd && Input.GetKeyDown(KeyCode.Space))
+        {
+            isGameEnd = false;
+            LoadScene(nextSceneName);
+        }
+    }
+
+    public void TheEnd()
+    {
+        StartCoroutine(FadeInAndLoadScene());
     }
 
     private IEnumerator MoveBetweenPoints()
@@ -41,10 +72,16 @@ public class TitleMenuManager : MonoBehaviour
         while (isMovingBetweenPoints)
         {
             yield return StartCoroutine(MoveCamera(point1.position, point2.position)); // point1 -> point2로 이동
+            yield return new WaitForSeconds(5);
             yield return StartCoroutine(MoveCamera(point2.position, point1.position)); // point2 -> point1로 이동
+            yield return new WaitForSeconds(5);
         }
     }
 
+    public void OnClickSettingBtn()
+    {
+        TitleUI.SetActive(false);
+    }
 
     public void GameStart()
     {
@@ -75,6 +112,9 @@ public class TitleMenuManager : MonoBehaviour
         float duration = 4.0f;
 
         yield return StartCoroutine(MoveCameraBezier(startPosition, passPoint.position, targetPosition, duration));
+        GameManager.Instance.OnExplain(true);
+        PlayerHPUI.SetActive(true);
+        BulletCountUI.SetActive(true);
     }
 
     private IEnumerator MoveCameraBezier(Vector3 start, Vector3 control, Vector3 end, float duration)
@@ -122,12 +162,44 @@ public class TitleMenuManager : MonoBehaviour
         SoundManager.Instance.PlaySfx("EquipGun", Vector3.zero, 0f);
 
         SceneManager.LoadScene(pSceneName);
-
+        Cursor.lockState = CursorLockMode.Confined;
         Debug.Log("Scene 변경 :" + pSceneName);
     }
 
     public void ExitGame()
     {
         Application.Quit();
+    }
+
+    IEnumerator FadeInAndLoadScene()
+    {
+        isGameEnd = true;
+        EndPanel.gameObject.SetActive(true);
+        yield return StartCoroutine(FadeImage(0, 1, fadeDuration));
+        //yield return StartCoroutine(FadeImage(1, 0, fadeDuration));
+    }
+
+    IEnumerator FadeImage(float startAlpha, float endAlpha, float duration)
+    {
+        float elapsedTime = 0.0f;
+
+        Color panelColor = EndPanel.color;
+        Color textColor = EndText.color;
+
+        while (elapsedTime < duration)
+        {
+            elapsedTime += Time.deltaTime;
+            float newAlpha = Mathf.Lerp(startAlpha, endAlpha, elapsedTime / duration);
+            float textAlpha = Mathf.Lerp(startAlpha, endAlpha, elapsedTime / duration);
+            panelColor.a = newAlpha;
+            textColor.a = textAlpha;
+            EndPanel.color = panelColor;
+            EndText.color = textColor;
+            yield return null;
+        }
+        panelColor.a = endAlpha;
+        EndPanel.color = panelColor;
+
+        RetryText.gameObject.SetActive(true);
     }
 }

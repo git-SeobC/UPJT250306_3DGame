@@ -8,7 +8,9 @@ using Unity.VisualScripting.Antlr3.Runtime;
 using UnityEngine;
 using UnityEngine.Animations.Rigging;
 using UnityEngine.Rendering.HighDefinition; // NameSpace : 소속
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using static DoorManager;
 
 
 public enum WeaponMode
@@ -18,6 +20,7 @@ public enum WeaponMode
     Rifle,
     Sniper
 }
+
 
 public class PlayerManager : MonoBehaviour
 {
@@ -88,7 +91,7 @@ public class PlayerManager : MonoBehaviour
 
     // Item pick 관련 변수
     public Vector3 boxSize = new Vector3(1f, 1f, 1f);
-    public float castDistance = 5f;
+    public float castDistance = 0.005f;
     public LayerMask itemLayer;
     public Transform itemGetPos;
 
@@ -104,7 +107,7 @@ public class PlayerManager : MonoBehaviour
     public AudioClip audioClipDamage;
 
     // UI
-    public GameObject gunIconObj; // 총 아이콘 오브젝트, 총기 아이템 근처에서 On
+    public GameObject keyEIconObj; // 총 아이콘 오브젝트, 총기 아이템 근처에서 On
     public GameObject crosshairObj; // 크로스헤어 오브젝트
     public GameObject BulletCountBtn;
     public GameObject PlayerHpBtn;
@@ -113,6 +116,7 @@ public class PlayerManager : MonoBehaviour
     public int playerHP = 100;
     private int fireBulletCount = 0;
     private int saveBulletCount = 0;
+    private bool isOnExplain = true; // 도움말 상태 체크
 
     // Pause UI
     public GameObject pauseObj;
@@ -133,6 +137,13 @@ public class PlayerManager : MonoBehaviour
     private float shakeMagnitude = 0.1f; // 흔들림 크기
     private Vector3 originalCameraPosition; // 반동전 기존 포지션
     private Coroutine cameraShakeCoroutine; // 반동 코루틴
+
+    private bool lastOpenedForward = true;
+
+    // 열쇠 획득 여부
+    public bool isGetHouseKey = false;
+    public bool isGetEscapeKey = false;
+
 
     private void Awake()
     {
@@ -164,8 +175,26 @@ public class PlayerManager : MonoBehaviour
         bulletText.text = $"{fireBulletCount}/{saveBulletCount}";
         bulletText.gameObject.SetActive(true);
         flashLightObj.SetActive(false);
-        PlayerHpBtn.SetActive(true);
-        BulletCountBtn.SetActive(true);
+        //PlayerHpBtn.SetActive(true);
+        //BulletCountBtn.SetActive(true);
+        //explanationUI.SetActive(true);
+
+        SoundManager.Instance.StopBGM();
+        SoundManager.Instance.SetSFXVolume(0.5f);
+        SoundManager.Instance.PlaySfx("EquipGun", Vector3.zero, 0f);
+
+        //RenderSettings.fog = true; // 안개 효과 활성화
+        //RenderSettings.fogColor = Color.gray; // 안개 색상 설정
+        //RenderSettings.fogDensity = 1.0f; // 안개의 밀도 설정
+        //RenderSettings.fogStartDistance = 10f; // 안개 시작 거리
+        //RenderSettings.fogEndDistance = 100f; // 종료 거리 (Linear 모드에서)
+        //RenderSettings.fogMode = FogMode.Exponential; // 지수 함수 기반 안개
+
+        //if (mainCamera != null) // 카메라의 clear Flags를 solid Color로 설정하고, 배경색을 안개색으로 설정
+        //{
+        //    mainCamera.clearFlags = CameraClearFlags.SolidColor;
+        //    mainCamera.backgroundColor = RenderSettings.fogColor;
+        //}
     }
 
     void Update()
@@ -193,6 +222,11 @@ public class PlayerManager : MonoBehaviour
             {
                 ReGame();
             }
+        }
+        if (Input.GetKeyDown(KeyCode.Tab))
+        {
+            isOnExplain = !isOnExplain;
+            GameManager.Instance.OnExplain(isOnExplain);
         }
 
         if (currentRecoil > 0)
@@ -312,6 +346,12 @@ public class PlayerManager : MonoBehaviour
         {
             velocity.y = -2f;
         }
+        else
+        {
+            velocity.y = Mathf.Clamp((velocity.y + gravity * Time.deltaTime), -50f, -2f);
+        }
+
+        characterController.Move(velocity * Time.deltaTime);
     }
 
     /// <summary>
@@ -555,7 +595,7 @@ public class PlayerManager : MonoBehaviour
         }
         if (Input.GetKeyDown(KeyCode.R) && isUseWeapon)
         {
-            if (saveBulletCount < 0)
+            if (saveBulletCount <= 0)
             {
                 // 총알 없음
                 return;
@@ -570,7 +610,7 @@ public class PlayerManager : MonoBehaviour
         }
     }
 
-    public void ItemPick()
+    public void ItemPick() // E 버튼 클릭
     {
         Vector3 origin = itemGetPos.position;
         Vector3 direction = itemGetPos.forward;
@@ -580,16 +620,17 @@ public class PlayerManager : MonoBehaviour
         foreach (var hit in hits)
         {
             Debug.Log($"{hit.collider.name}");
-            if (hit.collider.name == "Item_Sniper")
+            if (hit.collider.name == "shotgun2")
             {
                 hit.collider.gameObject.SetActive(false);
                 //audioSource.PlayOneShot(audioClipPikcup);
                 SoundManager.Instance.PlaySfx("TakeItem", transform.position);
-                gunIconObj.SetActive(false);
+                keyEIconObj.SetActive(false);
                 //Debug.Log($"Item : {hit.collider.name}");
                 isGetGunItem = true;
                 saveBulletCount = 25;
                 fireBulletCount = 0;
+                break;
             }
             else if (hit.collider.name == "ItemBullet")
             {
@@ -603,23 +644,118 @@ public class PlayerManager : MonoBehaviour
                     saveBulletCount = 20;
                 }
                 bulletText.text = $"{fireBulletCount}/{saveBulletCount}";
+                break;
             }
             else if (hit.collider.gameObject.tag == "Door")
             {
-                if (hit.collider.GetComponent<DoorManager>().isOpen)
+                #region Comment
+                // DoorManager 컴포넌트
+                //DoorManager doormanager = hit.collider.GetComponent<DoorManager>();
+                //if (doormanager != null)
+                //{
+                //    if (doormanager.isOpen) // 현재 문 상태 확인
+                //    {
+                //        if (lastOpenedForward)
+                //        {
+                //            doormanager.CloseForward(transform);
+                //        }
+                //        else
+                //        {
+                //            doormanager.CloseBackward(transform);
+                //        }
+                //    }
+                //    else
+                //    {
+                //        if (doormanager.Open(transform))
+                //        {
+                //            lastOpenedForward = doormanager.lastOpenedForward;
+                //        }
+                //    }
+                //    return;
+                //} 
+                #endregion
+
+                string doorName = hit.collider.gameObject.name;
+                DoorManager.Door door = DoorManager.Instance.doors.Find(d => d.name == doorName);
+
+                if (door != null)
                 {
-                    hit.collider.GetComponent<Animator>().SetTrigger("OpenBackward");
-                    DoorManager.Instance.isOpen = false;
+                    if (door.isLock)
+                    {
+                        if (door.lockKey.name == "HouseKey" && isGetHouseKey)
+                        {
+                            door.isLock = false;
+                            GameManager.Instance.OnCaption("DoorOpen");
+                            SoundManager.Instance.PlaySfx("UnLock", hit.collider.transform.position);
+                        }
+                        else
+                        {
+                            GameManager.Instance.OnCaption("NoHouseKey");
+                            break;
+                        }
+                    }
+
+                    if (door.isOpen)
+                    {
+                        // 문이 열려 있는 경우
+                        if (door.animator != null)
+                        {
+                            door.animator.SetTrigger("OpenBackward");
+                            SoundManager.Instance.PlaySfx("DoorClose", hit.collider.transform.position);
+                        }
+                        door.isOpen = false;
+                    }
+                    else
+                    {
+                        // 문이 닫혀 있는 경우
+                        if (door.animator != null)
+                        {
+                            door.animator.SetTrigger("OpenForward");
+                            SoundManager.Instance.PlaySfx("DoorOpen", hit.collider.transform.position);
+                        }
+                        door.isOpen = true;
+                    }
                 }
                 else
                 {
-                    hit.collider.GetComponent<Animator>().SetTrigger("OpenForward");
-                    DoorManager.Instance.isOpen = true;
+                    if (hit.collider.gameObject.name == "Door3" && isGetEscapeKey)
+                    {
+                        DoorManager.Instance.DoorAction(hit.collider.gameObject);
+                        SoundManager.Instance.PlaySfx("GateOpen", hit.collider.transform.position);
+                    }
+                    else if (hit.collider.gameObject.name == "Door3" && !isGetEscapeKey)
+                    {
+                        GameManager.Instance.OnCaption("NoEscapeKey");
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"Door '{doorName}' not found in DoorManager.");
+                    }
                 }
-                //DoorManager.Instance.DoorAction();
+                break;
+            }
+            else if (hit.collider.gameObject.name == "HouseKey")
+            {
+                hit.collider.gameObject.SetActive(false);
+                SoundManager.Instance.PlaySfx("TakeItem", transform.position);
+                isGetHouseKey = true;
+                keyEIconObj.SetActive(false);
+                GameManager.Instance.SetExplanationText("Find Gate Key");
+                GameManager.Instance.OnCaption("All right, let's go get the gate key now");
+            }
+            else if (hit.collider.gameObject.name == "EscapeKey")
+            {
+                hit.collider.gameObject.SetActive(false);
+                SoundManager.Instance.PlaySfx("TakeItem", transform.position);
+                isGetEscapeKey = true;
+                keyEIconObj.SetActive(false);
+                GameManager.Instance.SetExplanationText("Escape");
+                GameManager.Instance.OnCaption("it's better get out of here quickly");
             }
         }
     }
+
+
 
     void FirstPoersonMovement()
     {
@@ -764,7 +900,10 @@ public class PlayerManager : MonoBehaviour
         playerHP += damage;
         if (playerHP <= 0)
         {
-            Destroy(gameObject);
+            animator.SetTrigger("Dying");
+            gameObject.GetComponent<CharacterController>().enabled = false;
+            Destroy(gameObject, 5.0f);
+            TitleMenuManager.Instance.TheEnd();
         }
         else if (playerHP > 100)
         {
@@ -784,8 +923,8 @@ public class PlayerManager : MonoBehaviour
                 SoundManager.Instance.PlaySfx("PlayerHit", transform.position);
 
                 animator.SetTrigger("Hit");
-                
-                PlayerHealth(other.GetComponentInParent<ZombieManager>().ZombiePower);
+
+                PlayerHealth(-other.GetComponentInParent<ZombieManager>().ZombiePower);
 
                 //Debug.Log("Player Trigger Collision");
                 //Debug.Log("앙 마자띠");
@@ -797,10 +936,28 @@ public class PlayerManager : MonoBehaviour
         if (other.gameObject.layer == LayerMask.NameToLayer("Item"))
         {
             //Debug.Log("Gun Icon Set true");
-            gunIconObj.SetActive(true);
+            keyEIconObj.SetActive(true);
 
             // 오브젝트 상속관계 변경 (.SetParent)
             //other.gameObject.transform.SetParent(transform);
+        }
+
+        if (other.gameObject.name == "ExplainOn")
+        {
+            GameManager.Instance.SetExplanationText("Find house key");
+            GameManager.Instance.OnCaption("I need to find the keys to the house. Maybe it's in a storage room in the grave");
+            other.gameObject.SetActive(false);
+        }
+
+        if (other.gameObject.name == "ExplainOn2")
+        {
+            GameManager.Instance.OnCaption("To get out of the gate, I need the gate key in the locked door of the house");
+            other.gameObject.SetActive(false);
+        }
+
+        if (other.gameObject.name == "TheEnd")
+        {
+            TitleMenuManager.Instance.TheEnd();
         }
     }
 
@@ -809,7 +966,7 @@ public class PlayerManager : MonoBehaviour
         if (other.gameObject.layer == LayerMask.NameToLayer("Item"))
         {
             Debug.Log("Gun Icon Set false");
-            gunIconObj.SetActive(false);
+            keyEIconObj.SetActive(false);
         }
     }
 
@@ -846,4 +1003,14 @@ public class PlayerManager : MonoBehaviour
         Debug.DrawLine(corners[3], corners[7], Color.green, 3.0f);
         Debug.DrawRay(origin, direction * castDistance, Color.green);
     }
+
+    // Coroutine으로 자막 FadeIn/FadeOut 처리
+
+
+    //void OnSceneLoaded(Scene scene, LoadSceneMode mode) // 씬이 로드될 때 호출되는 메소드
+    //{
+    //    Debug.Log("Loaded Scene : " + scene.name);
+    //    // 어떤 씬일 때 어떤 작업을 할지 조건문이 있어야함
+    //}
+
 }

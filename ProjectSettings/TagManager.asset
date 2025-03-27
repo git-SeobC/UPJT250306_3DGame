@@ -8,6 +8,8 @@ TagManager:
   - Enemy
   - Attack
   - Door
+  - HouseKey
+  - EscapeKey
   layers:
   - Default
   - TransparentFX
