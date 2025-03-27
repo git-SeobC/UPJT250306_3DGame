@@ -126,6 +126,7 @@ public class PlayerManager : MonoBehaviour
     public GameObject flashLightObj;
     public AudioClip audioClipLightOn;
     private bool isFlashLightOn = false;
+    private Transform flashLightPos;
 
     private WeaponMode currentWeaponMode = WeaponMode.Sniper;
     private int ShotgunRayCount = 5; // 탄 퍼짐 개수
@@ -175,13 +176,14 @@ public class PlayerManager : MonoBehaviour
         bulletText.text = $"{fireBulletCount}/{saveBulletCount}";
         bulletText.gameObject.SetActive(true);
         flashLightObj.SetActive(false);
+        flashLightPos = flashLightObj.transform;
         //PlayerHpBtn.SetActive(true);
         //BulletCountBtn.SetActive(true);
         //explanationUI.SetActive(true);
 
         SoundManager.Instance.StopBGM();
         SoundManager.Instance.SetSFXVolume(0.5f);
-        SoundManager.Instance.PlaySfx("EquipGun", Vector3.zero, 0f);
+        SoundManager.Instance.PlaySfx("StartGame", Vector3.zero, 0f);
 
         //RenderSettings.fog = true; // 안개 효과 활성화
         //RenderSettings.fogColor = Color.gray; // 안개 색상 설정
@@ -398,6 +400,8 @@ public class PlayerManager : MonoBehaviour
                 SetTargetDistance(zoomDistance);
                 zoomCoroutine = StartCoroutine(ZoomCamera(targetDistance));
             }
+
+            flashLightObj.transform.Rotate(50, 0, 0);
         }
 
         if (Input.GetMouseButtonUp(1) && isGetGunItem && isUseWeapon) // 우측 버튼 뗄 때
@@ -423,6 +427,8 @@ public class PlayerManager : MonoBehaviour
                 SetTargetDistance(thirdPersonDistance);
                 zoomCoroutine = StartCoroutine(ZoomCamera(targetDistance));
             }
+
+            flashLightObj.transform.Rotate(-50, 0, 0);
         }
     }
 
@@ -603,8 +609,19 @@ public class PlayerManager : MonoBehaviour
             else
             {
                 animator.SetTrigger("Reload");
-                saveBulletCount -= 5 - fireBulletCount; // 총기 별 총알 장전 수 수정 필요
-                fireBulletCount = 5;
+                SoundManager.Instance.PlaySfx("Reload", transform.position);
+
+                if (saveBulletCount < 5)
+                {
+                    fireBulletCount = saveBulletCount;
+                    saveBulletCount = 0;
+                }
+                else
+                {
+                    saveBulletCount -= 5 - fireBulletCount; // 총기 별 총알 장전 수 수정 필요
+                    fireBulletCount = 5;
+                }
+
                 bulletText.text = $"{fireBulletCount}/{saveBulletCount}";
             }
         }

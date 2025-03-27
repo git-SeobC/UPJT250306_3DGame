@@ -1,0 +1,3 @@
+StartGameSound : https://pixabay.com/ko/sound-effects/biodynamic-impact-braam-tonal-dark-176441/
+Reload : Sound Effect by <a href="https://pixabay.com/ko/users/freesound_community-46691455/?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=6787">freesound_community</a> from <a href="https://pixabay.com//?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=6787">Pixabay</a>
+OnSettings : Sound Effect by <a href="https://pixabay.com/ko/users/universfield-28281460/?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=123781">Universfield</a> from <a href="https://pixabay.com/sound-effects//?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=123781">Pixabay</a>

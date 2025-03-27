@@ -13,6 +13,7 @@ public class SoundManager : MonoBehaviour
 
     public AudioSource bgmSource;
     public AudioSource sfxSource;
+    public float bgmVolume = 1.0f;
 
     private Dictionary<string, AudioClip> bgmClips = new Dictionary<string, AudioClip>();
     private Dictionary<string, AudioClip> sfxClips = new Dictionary<string, AudioClip>();
@@ -36,7 +37,8 @@ public class SoundManager : MonoBehaviour
             Instance = this;
             DontDestroyOnLoad(gameObject);
             InitializeAudioClip();
-            SoundManager.Instance.PlayBGM("TitleBgm", 0.2f);
+            SoundManager.Instance.PlayBGM("TitleBgm", 1.0f);
+
         }
         else
         {
@@ -163,10 +165,10 @@ public class SoundManager : MonoBehaviour
 
         for (float t = 0; t < duration; t += Time.deltaTime)
         {
-            bgmSource.volume = Mathf.Lerp(startVolume, 1f, t / duration);
+            bgmSource.volume = Mathf.Lerp(startVolume, bgmVolume, t / duration);
             yield return null;
         }
 
-        bgmSource.volume = 1.0f;
+        bgmSource.volume = bgmVolume;
     }
 }

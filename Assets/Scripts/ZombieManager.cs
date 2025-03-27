@@ -238,12 +238,12 @@ public class ZombieManager : MonoBehaviour
                 agent.isStopped = false;
                 agent.destination = targetPoint.position;
 
-                if (agent.isOnOffMeshLink)
-                {
-                    StartCoroutine(JumpAcrossLink());
-                }
+                //if (agent.isOnOffMeshLink)
+                //{
+                //    StartCoroutine(JumpAcrossLink());
+                //}
 
-                if (Vector3.Distance(transform.position, targetPoint.position) < 0.3f)
+                if (Vector3.Distance(transform.position, targetPoint.position) < 0.5f)
                 {
                     currentPoint = (currentPoint + 1) % patrolPoints.Length;
                 }
@@ -361,6 +361,7 @@ public class ZombieManager : MonoBehaviour
         {
             animator.SetBool("IsWalk", false);
             animator.SetTrigger("Hit");
+            agent.isStopped = true;
             //audioSource.PlayOneShot(audioClipHit);
             SoundManager.Instance.PlaySfx("HitZombie", transform.position);
             ZombieHp -= pDamaged;
@@ -378,6 +379,7 @@ public class ZombieManager : MonoBehaviour
                 ChangeState(EZombieState.Chase);
             }
         }
+        agent.isStopped = false;
     }
 
     private IEnumerator Die()
