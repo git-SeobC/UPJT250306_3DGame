@@ -1,16 +1,7 @@
 using System.Collections;
-using System.Collections.Generic;
-using System.Threading;
-using TMPro;
-using Unity.Hierarchy;
-using Unity.VisualScripting;
-using Unity.VisualScripting.Antlr3.Runtime;
 using UnityEngine;
 using UnityEngine.Animations.Rigging;
-using UnityEngine.Rendering.HighDefinition; // NameSpace : 소속
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using static DoorManager;
 
 
 public enum WeaponMode
@@ -213,15 +204,17 @@ public class PlayerManager : MonoBehaviour
         {
             ActionFlashLigh();
         }
-        if (Input.GetKeyDown(KeyCode.P))
+        if (Input.GetKeyDown(KeyCode.Escape))
         {
             isPause = !isPause;
             if (isPause)
             {
+                Cursor.lockState = CursorLockMode.Confined;
                 Pause();
             }
             else
             {
+                Cursor.lockState = CursorLockMode.Locked;
                 ReGame();
             }
         }
@@ -645,7 +638,7 @@ public class PlayerManager : MonoBehaviour
                 keyEIconObj.SetActive(false);
                 //Debug.Log($"Item : {hit.collider.name}");
                 isGetGunItem = true;
-                saveBulletCount = 25;
+                saveBulletCount = 40;
                 fireBulletCount = 0;
                 break;
             }

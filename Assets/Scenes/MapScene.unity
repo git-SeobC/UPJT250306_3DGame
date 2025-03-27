@@ -4130,9 +4130,17 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 228403530}
     m_Modifications:
+    - target: {fileID: 473180164310129119, guid: d6a98eb2d957ccb4d954e6e05ca0f1c2, type: 3}
+      propertyPath: m_Speed
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 2066923822373961629, guid: d6a98eb2d957ccb4d954e6e05ca0f1c2, type: 3}
+      propertyPath: ZombieHp
+      value: 60
+      objectReference: {fileID: 0}
     - target: {fileID: 2066923822373961629, guid: d6a98eb2d957ccb4d954e6e05ca0f1c2, type: 3}
       propertyPath: moveSpeed
-      value: 4
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 2066923822373961629, guid: d6a98eb2d957ccb4d954e6e05ca0f1c2, type: 3}
       propertyPath: ZombiePower
@@ -4240,13 +4248,21 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 228403530}
     m_Modifications:
+    - target: {fileID: 473180164310129119, guid: d6a98eb2d957ccb4d954e6e05ca0f1c2, type: 3}
+      propertyPath: m_Speed
+      value: 2
+      objectReference: {fileID: 0}
     - target: {fileID: 2066923822373961629, guid: d6a98eb2d957ccb4d954e6e05ca0f1c2, type: 3}
       propertyPath: target
       value: 
       objectReference: {fileID: 2107072297}
     - target: {fileID: 2066923822373961629, guid: d6a98eb2d957ccb4d954e6e05ca0f1c2, type: 3}
+      propertyPath: ZombieHp
+      value: 60
+      objectReference: {fileID: 0}
+    - target: {fileID: 2066923822373961629, guid: d6a98eb2d957ccb4d954e6e05ca0f1c2, type: 3}
       propertyPath: moveSpeed
-      value: 4
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 2066923822373961629, guid: d6a98eb2d957ccb4d954e6e05ca0f1c2, type: 3}
       propertyPath: ZombiePower
@@ -8382,7 +8398,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 2107072302}
         m_TargetAssemblyTypeName: PlayerManager, Assembly-CSharp
-        m_MethodName: ReGame
+        m_MethodName: Exit
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -9257,13 +9273,21 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 228403530}
     m_Modifications:
+    - target: {fileID: 473180164310129119, guid: d6a98eb2d957ccb4d954e6e05ca0f1c2, type: 3}
+      propertyPath: m_Speed
+      value: 2
+      objectReference: {fileID: 0}
     - target: {fileID: 2066923822373961629, guid: d6a98eb2d957ccb4d954e6e05ca0f1c2, type: 3}
       propertyPath: target
       value: 
       objectReference: {fileID: 2107072297}
     - target: {fileID: 2066923822373961629, guid: d6a98eb2d957ccb4d954e6e05ca0f1c2, type: 3}
+      propertyPath: ZombieHp
+      value: 60
+      objectReference: {fileID: 0}
+    - target: {fileID: 2066923822373961629, guid: d6a98eb2d957ccb4d954e6e05ca0f1c2, type: 3}
       propertyPath: moveSpeed
-      value: 4
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 2066923822373961629, guid: d6a98eb2d957ccb4d954e6e05ca0f1c2, type: 3}
       propertyPath: ZombiePower
@@ -9552,13 +9576,21 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 228403530}
     m_Modifications:
+    - target: {fileID: 473180164310129119, guid: d6a98eb2d957ccb4d954e6e05ca0f1c2, type: 3}
+      propertyPath: m_Speed
+      value: 2
+      objectReference: {fileID: 0}
     - target: {fileID: 2066923822373961629, guid: d6a98eb2d957ccb4d954e6e05ca0f1c2, type: 3}
       propertyPath: target
       value: 
       objectReference: {fileID: 2107072297}
     - target: {fileID: 2066923822373961629, guid: d6a98eb2d957ccb4d954e6e05ca0f1c2, type: 3}
+      propertyPath: ZombieHp
+      value: 60
+      objectReference: {fileID: 0}
+    - target: {fileID: 2066923822373961629, guid: d6a98eb2d957ccb4d954e6e05ca0f1c2, type: 3}
       propertyPath: moveSpeed
-      value: 4
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 2066923822373961629, guid: d6a98eb2d957ccb4d954e6e05ca0f1c2, type: 3}
       propertyPath: ZombiePower
@@ -11207,7 +11239,7 @@ Transform:
   m_GameObject: {fileID: 885793670}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.29, y: 0.036000013, z: 19.71}
+  m_LocalPosition: {x: -0.29, y: 0.036000013, z: 37.45}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -14363,7 +14395,7 @@ Transform:
   m_GameObject: {fileID: 1087150007}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.11999999, y: 0.036000013, z: 50.769997}
+  m_LocalPosition: {x: -0.11999999, y: 0.036000013, z: 58.31}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -19552,7 +19584,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   bgmSource: {fileID: 1453715359}
   sfxSource: {fileID: 1453715358}
-  bgmVolume: 0.2
+  bgmVolume: 0.5
   bgmClipList:
   - name: TitleBgm
     clip: {fileID: 8300000, guid: 08a8f80ffc85ffd469e2c796767d152d, type: 3}
@@ -29399,13 +29431,21 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 228403530}
     m_Modifications:
+    - target: {fileID: 473180164310129119, guid: d6a98eb2d957ccb4d954e6e05ca0f1c2, type: 3}
+      propertyPath: m_Speed
+      value: 2
+      objectReference: {fileID: 0}
     - target: {fileID: 2066923822373961629, guid: d6a98eb2d957ccb4d954e6e05ca0f1c2, type: 3}
       propertyPath: target
       value: 
       objectReference: {fileID: 2107072297}
     - target: {fileID: 2066923822373961629, guid: d6a98eb2d957ccb4d954e6e05ca0f1c2, type: 3}
+      propertyPath: ZombieHp
+      value: 60
+      objectReference: {fileID: 0}
+    - target: {fileID: 2066923822373961629, guid: d6a98eb2d957ccb4d954e6e05ca0f1c2, type: 3}
       propertyPath: moveSpeed
-      value: 4
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 2066923822373961629, guid: d6a98eb2d957ccb4d954e6e05ca0f1c2, type: 3}
       propertyPath: ZombiePower
@@ -57748,13 +57788,21 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 228403530}
     m_Modifications:
+    - target: {fileID: 473180164310129119, guid: d6a98eb2d957ccb4d954e6e05ca0f1c2, type: 3}
+      propertyPath: m_Speed
+      value: 2
+      objectReference: {fileID: 0}
     - target: {fileID: 2066923822373961629, guid: d6a98eb2d957ccb4d954e6e05ca0f1c2, type: 3}
       propertyPath: target
       value: 
       objectReference: {fileID: 2107072297}
     - target: {fileID: 2066923822373961629, guid: d6a98eb2d957ccb4d954e6e05ca0f1c2, type: 3}
+      propertyPath: ZombieHp
+      value: 60
+      objectReference: {fileID: 0}
+    - target: {fileID: 2066923822373961629, guid: d6a98eb2d957ccb4d954e6e05ca0f1c2, type: 3}
       propertyPath: moveSpeed
-      value: 4
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 2066923822373961629, guid: d6a98eb2d957ccb4d954e6e05ca0f1c2, type: 3}
       propertyPath: ZombiePower
